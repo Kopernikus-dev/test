@@ -1,8 +1,8 @@
 // Copyright (c) 2014-2016 The Dash developers
 // Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #include "activemasternode.h"
 
 #include "addrman.h"
@@ -13,9 +13,9 @@
 #include "messagesigner.h"
 #include "netbase.h"
 #include "protocol.h"
+#include "collateral.h"
 
-//
-// Bootup the Masternode, look for a 10000 PIVX input and register on the network
+// Bootup the Masternode, look for a 10000 EncoCoin input and register on the network
 //
 void CActiveMasternode::ManageStatus()
 {
@@ -161,8 +161,8 @@ bool CActiveMasternode::SendMasternodePing(std::string& errorMessage)
         if (mnodeman.mapSeenMasternodeBroadcast.count(hash)) mnodeman.mapSeenMasternodeBroadcast[hash].lastPing = mnp;
 
         mnp.Relay();
-        return true;
 
+        return true;
     } else {
         // Seems like we are trying to send a ping while the Masternode is not registered in the network
         errorMessage = "Masternode List doesn't include our Masternode, shutting down Masternode pinging service! " + vin->ToString();

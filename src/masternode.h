@@ -1,5 +1,6 @@
 // Copyright (c) 2014-2015 The Dash developers
 // Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,14 +16,13 @@
 #include "timedata.h"
 #include "util.h"
 
-#define MASTERNODE_MIN_CONFIRMATIONS 15
+#define MASTERNODE_MIN_CONFIRMATIONS 20
 #define MASTERNODE_MIN_MNP_SECONDS (10 * 60)
 #define MASTERNODE_MIN_MNB_SECONDS (5 * 60)
 #define MASTERNODE_PING_SECONDS (5 * 60)
 #define MASTERNODE_EXPIRATION_SECONDS (120 * 60)
 #define MASTERNODE_REMOVAL_SECONDS (130 * 60)
 #define MASTERNODE_CHECK_SECONDS 5
-
 
 class CMasternode;
 class CMasternodeBroadcast;
@@ -105,7 +105,7 @@ public:
 };
 
 //
-// The Masternode Class. It contains the input of the 10000 PIV, signature to prove
+// The Masternode Class. It contains the input of the 10000 XNK, signature to prove
 // it's the one who own that ip address and code for calculating the payment election.
 //
 class CMasternode : public CSignedMessage
@@ -229,7 +229,7 @@ public:
     {
         now == -1 ? now = GetAdjustedTime() : now;
 
-        return lastPing.IsNull() ? false : now - lastPing.sigTime < seconds;
+         return lastPing.IsNull() ? false : now - lastPing.sigTime < seconds;
     }
 
     void Disable()
@@ -262,7 +262,7 @@ public:
     int64_t GetLastPaid();
     bool IsValidNetAddr();
 
-    /// Is the input associated with collateral public key? (and there is 10000 PIV - checking if valid masternode)
+    /// Is the input associated with collateral public key? (and there is 10000 XNK - checking if valid masternode)
     bool IsInputAssociatedWithPubkey() const;
 };
 

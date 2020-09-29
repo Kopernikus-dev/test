@@ -1,16 +1,17 @@
 // Copyright (c) 2019-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#include "qt/pivx/masternodewizarddialog.h"
-#include "qt/pivx/forms/ui_masternodewizarddialog.h"
+#include "qt/encocoin/masternodewizarddialog.h"
+#include "qt/encocoin/forms/ui_masternodewizarddialog.h"
 
 #include "activemasternode.h"
 #include "optionsmodel.h"
+#include "collateral.h"
 #include "pairresult.h"
-#include "qt/pivx/mnmodel.h"
-#include "qt/pivx/guitransactionsutils.h"
-#include "qt/pivx/qtutils.h"
+#include "qt/encocoin/mnmodel.h"
+#include "qt/encocoin/guitransactionsutils.h"
+#include "qt/encocoin/qtutils.h"
 
 #include <QFile>
 #include <QIntValidator>
@@ -72,7 +73,7 @@ MasterNodeWizardDialog::MasterNodeWizardDialog(WalletModel *model, QWidget *pare
     } else if (walletModel->isTestNetwork()) {
         ui->lineEditPort->setText("51474");
     } else {
-        ui->lineEditPort->setText("51472");
+        ui->lineEditPort->setText("43013");
     }
 
     // Confirm icons
@@ -212,8 +213,8 @@ bool MasterNodeWizardDialog::createMN()
         SendCoinsRecipient sendCoinsRecipient(
                 QString::fromStdString(dest.ToString()),
                 QString::fromStdString(alias),
-                CAmount(10000) * COIN,
-                "");
+				CollateralRequired(chainActive.Height()),
+				"");
 
         // Send the 10 tx to one of your address
         QList<SendCoinsRecipient> recipients;
@@ -262,7 +263,7 @@ bool MasterNodeWizardDialog::createMN()
         int indexOut = -1;
         for (int i=0; i < (int)walletTx->vout.size(); i++) {
             CTxOut& out = walletTx->vout[i];
-            if (out.nValue == 10000 * COIN) {
+            if (IsValidCollateral(out.nValue, chainActive.Height())) {
                 indexOut = i;
                 break;
             }

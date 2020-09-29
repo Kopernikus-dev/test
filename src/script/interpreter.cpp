@@ -1,6 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2017-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,7 +14,6 @@
 #include "pubkey.h"
 #include "script/script.h"
 #include "uint256.h"
-
 
 typedef std::vector<unsigned char> valtype;
 
@@ -1174,7 +1174,7 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
     if ((nHashType & 0x1f) == SIGHASH_SINGLE) {
         if (nIn >= txTo.vout.size()) {
             //  nOut out of range
-            return UINT256_ONE;
+        return UINT256_ONE;
         }
     }
 

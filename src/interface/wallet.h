@@ -1,10 +1,11 @@
 // Copyright (c) 2018-2020 The Bitcoin Core developers
 // Copyright (c) 2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIVX_INTERFACES_WALLET_H
-#define PIVX_INTERFACES_WALLET_H
+#ifndef ENCOCOIN_INTERFACES_WALLET_H
+#define ENCOCOIN_INTERFACES_WALLET_H
 
 #include <amount.h>
 #include "wallet/wallet.h"
@@ -47,4 +48,4 @@ private:
 
 } // namespace interfaces
 
-#endif // BITCOIN_INTERFACES_WALLET_H
+#endif // ENCOCOIN_INTERFACES_WALLET_H

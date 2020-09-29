@@ -1,8 +1,8 @@
 // Copyright (c) 2013 The Bitcoin Core developers
 // Copyright (c) 2017-2020 The PIVX developers
+// Copyright (c) 2020	   The EncoCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #include "data/sighash.json.h"
 
 #include "consensus/tx_verify.h"
@@ -12,7 +12,7 @@
 #include "script/interpreter.h"
 #include "util.h"
 #include "version.h"
-#include "test_pivx.h"
+#include "test_encocoin.h"
 
 #include <iostream>
 
@@ -59,7 +59,7 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
         if (nOut >= txTmp.vout.size())
         {
             printf("ERROR: SignatureHash() : nOut=%d out of range\n", nOut);
-            return UINT256_ONE;
+        return UINT256_ONE;
         }
         txTmp.vout.resize(nOut+1);
         for (unsigned int i = 0; i < nOut; i++)

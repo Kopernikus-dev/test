@@ -1,8 +1,9 @@
-// Copyright (c) 2019 The PIVX developers
+// Copyright (c) 2019-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "qt/pivx/coldstakingmodel.h"
+#include "qt/encocoin/coldstakingmodel.h"
 #include "uint256.h"
 #include "bitcoinunits.h"
 #include "guiutil.h"
@@ -88,7 +89,7 @@ bool ColdStakingModel::parseCSDelegation(const CTxOut& out, CSDelegation& ret, c
             CChainParams::STAKING_ADDRESS
     );
 
-    std::string ownerAddressStr = EncodeDestination(
+   std::string ownerAddressStr = EncodeDestination(
             addresses[1],
             CChainParams::PUBKEY_ADDRESS
     );

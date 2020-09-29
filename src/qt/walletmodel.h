@@ -1,11 +1,11 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2016 The Dash developers
 // Copyright (c) 2017-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#ifndef PIVX_QT_WALLETMODEL_H
-#define PIVX_QT_WALLETMODEL_H
+#ifndef EncoCoin_QT_WALLETMODEL_H
+#define EncoCoin_QT_WALLETMODEL_H
 
 #include "askpassphrasedialog.h"
 #include "paymentrequestplus.h"
@@ -106,7 +106,7 @@ public:
     }
 };
 
-/** Interface to PIVX wallet from Qt view code. */
+/** Interface to EncoCoin wallet from Qt view code. */
 class WalletModel : public QObject
 {
     Q_OBJECT
@@ -135,7 +135,7 @@ public:
         Unencrypted,                 // !wallet->IsCrypted()
         Locked,                      // wallet->IsCrypted() && wallet->IsLocked()
         Unlocked,                    // wallet->IsCrypted() && !wallet->IsLocked()
-        UnlockedForStaking          // wallet->IsCrypted() && !wallet->IsLocked() && wallet->fWalletUnlockStaking
+       UnlockedForStaking          // wallet->IsCrypted() && !wallet->IsLocked() && wallet->fWalletUnlockStaking
     };
 
     OptionsModel* getOptionsModel();
@@ -166,7 +166,7 @@ public:
 
     EncryptionStatus getEncryptionStatus() const;
     bool isWalletUnlocked() const;
-    bool isWalletLocked(bool fFullUnlocked = true) const;
+   bool isWalletLocked(bool fFullUnlocked = true) const;
     void emitBalanceChanged(); // Force update of UI-elements even when no values have changed
 
     // Check address for validity
@@ -345,4 +345,4 @@ public Q_SLOTS:
     bool updateAddressBookLabels(const CTxDestination& address, const std::string& strName, const std::string& strPurpose);
 };
 
-#endif // PIVX_QT_WALLETMODEL_H
+#endif // EncoCoin_QT_WALLETMODEL_H

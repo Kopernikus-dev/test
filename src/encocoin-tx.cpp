@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,7 +25,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/assign/list_of.hpp>
 
-
 static bool fCreateBlank;
 static std::map<std::string, UniValue> registers;
 CClientUIInterface uiInterface;
@@ -46,10 +46,10 @@ static bool AppInitRawTx(int argc, char* argv[])
 
     if (argc < 2 || mapArgs.count("-?") || mapArgs.count("-help")) {
         // First part of help message is specific to this utility
-        std::string strUsage = _("Pivx Core pivx-tx utility version") + " " + FormatFullVersion() + "\n\n" +
+        std::string strUsage = _("EncoCoin Core encocoin-tx utility version") + " " + FormatFullVersion() + "\n\n" +
                                _("Usage:") + "\n" +
-                               "  pivx-tx [options] <hex-tx> [commands]  " + _("Update hex-encoded pivx transaction") + "\n" +
-                               "  pivx-tx [options] -create [commands]   " + _("Create hex-encoded pivx transaction") + "\n" +
+                               "  encocoin-tx [options] <hex-tx> [commands]  " + _("Update hex-encoded encocoin transaction") + "\n" +
+                               "  encocoin-tx [options] -create [commands]   " + _("Create hex-encoded encocoin transaction") + "\n" +
                                "\n";
 
         fprintf(stdout, "%s", strUsage.c_str());
@@ -325,7 +325,7 @@ static CAmount AmountFromValue(const UniValue& value)
     if (!value.isNum() && !value.isStr())
         throw std::runtime_error("Amount is not a number or string");
     double dAmount = value.get_real();
-    if (dAmount <= 0.0 || dAmount > 21000000.0)
+    if (dAmount <= 0.0 || dAmount > 60000000.0)
         throw std::runtime_error("Invalid amount");
     CAmount nAmount = roundint64(dAmount * COIN);
     if (!Params().GetConsensus().MoneyRange(nAmount))
@@ -459,7 +459,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
 
         // ... and merge in other signatures:
         for (const CTransaction& txv : txVariants) {
-            sigdata = CombineSignatures(prevPubKey, MutableTransactionSignatureChecker(&mergedTx, i, amount), sigdata, DataFromTransaction(txv, i));
+             sigdata = CombineSignatures(prevPubKey, MutableTransactionSignatureChecker(&mergedTx, i, amount), sigdata, DataFromTransaction(txv, i));
         }
         UpdateTransaction(mergedTx, i, sigdata);
         if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&mergedTx, i, amount)))
@@ -595,7 +595,7 @@ static int CommandLineRawTx(int argc, char* argv[])
             if (argc < 2)
                 throw std::runtime_error("too few parameters");
 
-            // param: hex-encoded pivx transaction
+            // param: hex-encoded encocoin transaction
             std::string strHexTx(argv[1]);
             if (strHexTx == "-") // "-" implies standard input
                 strHexTx = readStdin();

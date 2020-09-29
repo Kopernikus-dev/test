@@ -4,9 +4,9 @@
 // Copyright (c) 2013-2014 The NovaCoin Developers
 // Copyright (c) 2014-2018 The BlackCoin Developers
 // Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #ifndef BITCOIN_CHAIN_H
 #define BITCOIN_CHAIN_H
 
@@ -272,9 +272,9 @@ public:
 
 /** Used to marshal pointers into hashes for db storage. */
 
-// New serialization introduced with 4.0.99
-static const int DBI_OLD_SER_VERSION = 4009900;
-static const int DBI_SER_VERSION_NO_ZC = 4009902;   // removes mapZerocoinSupply, nMoneySupply
+// New serialization introduced with 3.0.
+static const int DBI_OLD_SER_VERSION = 3000000;
+static const int DBI_SER_VERSION_NO_ZC = 3000002;   // removes mapZerocoinSupply, nMoneySupply
 
 class CDiskBlockIndex : public CBlockIndex
 {
@@ -311,7 +311,7 @@ public:
             READWRITE(VARINT(nUndoPos));
 
         if (nSerVersion >= DBI_SER_VERSION_NO_ZC) {
-            // Serialization with CLIENT_VERSION = 4009902+
+            // Serialization with CLIENT_VERSION = 3000002+
             READWRITE(nFlags);
             READWRITE(this->nVersion);
             READWRITE(vStakeModifier);
@@ -324,7 +324,7 @@ public:
                 READWRITE(nAccumulatorCheckpoint);
 
         } else if (nSerVersion > DBI_OLD_SER_VERSION && ser_action.ForRead()) {
-            // Serialization with CLIENT_VERSION = 4009901
+            // Serialization with CLIENT_VERSION = 3000001
             std::map<libzerocoin::CoinDenomination, int64_t> mapZerocoinSupply;
             int64_t nMoneySupply = 0;
             READWRITE(nMoneySupply);
@@ -342,7 +342,7 @@ public:
             }
 
         } else if (ser_action.ForRead()) {
-            // Serialization with CLIENT_VERSION = 4009900-
+            // Serialization with CLIENT_VERSION = 3000000-
             int64_t nMint = 0;
             uint256 hashNext{};
             int64_t nMoneySupply = 0;
@@ -497,6 +497,8 @@ public:
         }
     }
 };
+
+
 
 /** An in-memory indexed chain of blocks. */
 class CChain

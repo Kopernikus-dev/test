@@ -112,7 +112,7 @@ struct Params {
     int64_t nTime_EnforceNewSporkKey;
     int64_t nTime_RejectOldSporkKey;
 
-    // height-based activations
+    // Height-based activations
     int height_last_ZC_AccumCheckpoint;
     int height_last_ZC_WrappedSerials;
     int height_start_InvalidUTXOsCheck;
@@ -121,8 +121,8 @@ struct Params {
     int height_ZC_RecalcAccumulators;
 
     // validation by-pass
-    int64_t nPivxBadBlockTime;
-    unsigned int nPivxBadBlockBits;
+    int64_t nEncoCoinBadBlockTime;
+    unsigned int nEncoCoinBadBlockBits;
 
     // Map with network updates
     NetworkUpgrade vUpgrades[MAX_NETWORK_UPGRADES];
@@ -157,7 +157,6 @@ struct Params {
         // with stake modifier V2+, we require the utxo to be nStakeMinDepth deep in the chain
         return (contextHeight - utxoFromBlockHeight >= nStakeMinDepth);
     }
-
 
     /*
      * (Legacy) Zerocoin consensus params

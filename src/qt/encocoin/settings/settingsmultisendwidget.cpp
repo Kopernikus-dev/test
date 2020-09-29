@@ -1,17 +1,17 @@
 // Copyright (c) 2019-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "qt/pivx/settings/settingsmultisendwidget.h"
-#include "qt/pivx/settings/forms/ui_settingsmultisendwidget.h"
-#include "qt/pivx/settings/settingsmultisenddialog.h"
-#include "qt/pivx/qtutils.h"
+#include "qt/encocoin/settings/settingsmultisendwidget.h"
+#include "qt/encocoin/settings/forms/ui_settingsmultisendwidget.h"
+#include "qt/encocoin/settings/settingsmultisenddialog.h"
+#include "qt/encocoin/qtutils.h"
 #include "addresstablemodel.h"
 #include "base58.h"
 #include "init.h"
 #include "walletmodel.h"
 #include "wallet/wallet.h"
-
 
 #define DECORATION_SIZE 65
 #define NUM_ITEMS 3
@@ -33,7 +33,7 @@ int MultiSendModel::rowCount(const QModelIndex &parent) const
     return (int) pwalletMain->vMultiSend.size();
 }
 
-QVariant MultiSendModel::data(const QModelIndex &index, int role) const
+QVariant MultiSendModel::data(const QModelIndex &index, int role) const 
 {
     if (!index.isValid())
         return QVariant();
@@ -161,7 +161,7 @@ SettingsMultisendWidget::SettingsMultisendWidget(PWidget *parent) :
     ui->labelTitle->setText("Multisend");
     setCssTitleScreen(ui->labelTitle);
 
-    ui->labelSubtitle1->setText(tr("MultiSend allows you to automatically send up to 100% of your stake or masternode reward to a list of other PIVX addresses after it matures."));
+    ui->labelSubtitle1->setText(tr("MultiSend allows you to automatically send up to 100% of your stake or masternode reward to a list of other EncoCoin addresses after it matures."));
     setCssSubtitleScreen(ui->labelSubtitle1);
 
     //Button Group
@@ -195,7 +195,7 @@ SettingsMultisendWidget::SettingsMultisendWidget(PWidget *parent) :
     connect(ui->pushButtonClear, &QPushButton::clicked, this, &SettingsMultisendWidget::clearAll);
 }
 
-void SettingsMultisendWidget::showEvent(QShowEvent *event)
+void SettingsMultisendWidget::showEvent(QShowEvent *event) 
 {
     if (multiSendModel) {
         multiSendModel->updateList();
@@ -318,7 +318,7 @@ void SettingsMultisendWidget::addMultiSend(QString address, int percentage, QStr
     }
 
     CWalletDB walletdb(pwalletMain->strWalletFile);
-    if (!walletdb.WriteMultiSend(pwalletMain->vMultiSend)) {
+    if ( !walletdb.WriteMultiSend(pwalletMain->vMultiSend)) {
         inform(tr("Error saving  MultiSend, failed saving properties to the database."));
         return;
     }

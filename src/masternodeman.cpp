@@ -1,8 +1,8 @@
 // Copyright (c) 2014-2015 The Dash developers
 // Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #include "masternodeman.h"
 
 #include "addrman.h"
@@ -16,6 +16,7 @@
 #include "spork.h"
 #include "swifttx.h"
 #include "util.h"
+#include "collateral.h"
 
 #include <boost/thread/thread.hpp>
 
@@ -744,7 +745,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                     int64_t t = (*i).second;
                     if (GetTime() < t) {
                         LogPrintf("CMasternodeMan::ProcessMessage() : dseg - peer already asked me for the list\n");
-                        LOCK(cs_main);
+                         LOCK(cs_main);
                         Misbehaving(pfrom->GetId(), 34);
                         return;
                     }
@@ -831,7 +832,7 @@ void ThreadCheckMasternodes()
     if (fLiteMode) return; //disable all Masternode related functionality
 
     // Make this thread recognisable as the wallet flushing thread
-    util::ThreadRename("pivx-masternodeman");
+    util::ThreadRename("encocoin-masternodeman");
     LogPrintf("Masternodes thread started\n");
 
     unsigned int c = 0;

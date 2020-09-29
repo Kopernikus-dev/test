@@ -1,13 +1,13 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2017-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "script.h"
 #include "tinyformat.h"
 #include "utilstrencodings.h"
-
 
 const char* GetOpName(opcodetype opcode)
 {
@@ -145,7 +145,7 @@ const char* GetOpName(opcodetype opcode)
     case OP_ZEROCOINSPEND          : return "OP_ZEROCOINSPEND";
     case OP_ZEROCOINPUBLICSPEND    : return "OP_ZEROCOINPUBLICSPEND";
 
-    // cold staking
+    //cold staking
     case OP_CHECKCOLDSTAKEVERIFY   : return "OP_CHECKCOLDSTAKEVERIFY";
 
     case OP_INVALIDOPCODE          : return "OP_INVALIDOPCODE";

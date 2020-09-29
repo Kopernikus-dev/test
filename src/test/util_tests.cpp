@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2014 The Bitcoin Core developers
 // Copyright (c) 2017-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,13 +11,12 @@
 #include "sync.h"
 #include "utilstrencodings.h"
 #include "utilmoneystr.h"
-#include "test/test_pivx.h"
+#include "test/test_encocoin.h"
 
 #include <stdint.h>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
-
 
 BOOST_FIXTURE_TEST_SUITE(util_tests, BasicTestingSetup)
 
@@ -424,6 +424,7 @@ BOOST_AUTO_TEST_CASE(test_FormatSubVersion)
     BOOST_CHECK_EQUAL(FormatSubVersion("Test", 99900, comments),std::string("/Test:0.9.99(comment1)/"));
     BOOST_CHECK_EQUAL(FormatSubVersion("Test", 99900, comments2),std::string("/Test:0.9.99(comment1; comment2)/"));
 }
+
 
 BOOST_AUTO_TEST_CASE(test_ParseFixedPoint)
 {

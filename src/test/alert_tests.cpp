@@ -1,5 +1,5 @@
 // Copyright (c) 2013 The Bitcoin Core developers
-// Copyright (c) 2019-2020 The PIVX developers
+// Copyright (c) 2019 The EncoCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,7 +17,7 @@
 BOOST_FIXTURE_TEST_SUITE(Alert_tests, TestingSetup)
 
 BOOST_AUTO_TEST_CASE(PartitionAlert)
-{
+
     // !TODO: implement this
 }
 

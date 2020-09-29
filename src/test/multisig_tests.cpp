@@ -1,8 +1,8 @@
 // Copyright (c) 2011-2013 The Bitcoin Core developers
-// Copyright (c) 2019 The PIVX developers
+// Copyright (c) 2019-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #include "key.h"
 #include "keystore.h"
 #include "policy/policy.h"
@@ -12,7 +12,7 @@
 #include "script/sign.h"
 #include "script/ismine.h"
 #include "uint256.h"
-#include "test_pivx.h"
+#include "test_encocoin.h"
 
 
 #include <boost/test/unit_test.hpp>
@@ -138,8 +138,8 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
             }
             else
             {
-                BOOST_CHECK_MESSAGE(!VerifyScript(s, escrow, flags, MutableTransactionSignatureChecker(&txTo[2], 0, amount), &err), strprintf("escrow 2: %d %d", i, j));
-                BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
+                BOOST_CHECK_MESSAGE(VerifyScript(s, escrow, flags, MutableTransactionSignatureChecker(&txTo[2], 0, amount), &err), strprintf("escrow 1: %d %d", i, j));
+                BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
             }
         }
 }

@@ -1,8 +1,8 @@
 // Copyright (c) 2013-2014 The Bitcoin developers
-// Copyright (c) 2017-2019 The PIVX developers
+// Copyright (c) 2017-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #include "hash.h"
 #include "crypto/common.h"
 #include "crypto/hmac_sha512.h"

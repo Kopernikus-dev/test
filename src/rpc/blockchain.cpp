@@ -2,9 +2,9 @@
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
 // Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #include "base58.h"
 #include "checkpoints.h"
 #include "clientversion.h"
@@ -21,8 +21,8 @@
 #include "utilstrencodings.h"
 #include "hash.h"
 #include "wallet/wallet.h"
-#include "zpiv/zpivmodule.h"
-#include "zpivchain.h"
+#include "zxnk/zxnkmodule.h"
+#include "zxnkchain.h"
 
 #include <stdint.h>
 #include <fstream>
@@ -157,6 +157,21 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     }
 
     return result;
+}
+
+UniValue getsupply(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 0)
+        throw std::runtime_error(
+            "getsupply\n"
+            "\nReturns the current supply.\n"
+            "\nResult:\n"
+            "n    (numeric) The current supply\n"
+            "\nExamples:\n" +
+            HelpExampleCli("getsupply", "") + HelpExampleRpc("getsupply", ""));
+
+    LOCK(cs_main);
+    return ValueFromAmount(nMoneySupply);
 }
 
 UniValue getblockcount(const JSONRPCRequest& request)
@@ -418,7 +433,7 @@ UniValue getrawmempool(const JSONRPCRequest& request)
             "{                           (json object)\n"
             "  \"transactionid\" : {       (json object)\n"
             "    \"size\" : n,             (numeric) transaction size in bytes\n"
-            "    \"fee\" : n,              (numeric) transaction fee in pivx\n"
+            "    \"fee\" : n,              (numeric) transaction fee in encocoin\n"
             "    \"modifiedfee\" : n,      (numeric) transaction fee with fee deltas used for mining priority\n"
             "    \"time\" : n,             (numeric) local time transaction entered pool in seconds since 1 Jan 1970 GMT\n"
             "    \"height\" : n,           (numeric) block height when transaction entered pool\n"
@@ -502,6 +517,7 @@ UniValue getblock(const JSONRPCRequest& request)
             "  \"difficulty\" : x.xxx,  (numeric) The difficulty\n"
             "  \"previousblockhash\" : \"hash\",  (string) The hash of the previous block\n"
             "  \"nextblockhash\" : \"hash\"       (string) The hash of the next block\n"
+            "  \"moneysupply\" : \"supply\"       (numeric) The money supply when this block was added to the blockchain\n"
             "  \"stakeModifier\" : \"xxx\",       (string) Proof of Stake modifier\n"
             "  \"hashProofOfStake\" : \"hash\",   (string) Proof of Stake hash\n"
             "  }\n"
@@ -716,14 +732,14 @@ UniValue gettxout(const JSONRPCRequest& request)
             "{\n"
             "  \"bestblock\" : \"hash\",    (string) the block hash\n"
             "  \"confirmations\" : n,       (numeric) The number of confirmations\n"
-            "  \"value\" : x.xxx,           (numeric) The transaction value in PIV\n"
+            "  \"value\" : x.xxx,           (numeric) The transaction value in XNK\n"
             "  \"scriptPubKey\" : {         (json object)\n"
             "     \"asm\" : \"code\",       (string) \n"
             "     \"hex\" : \"hex\",        (string) \n"
             "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
             "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
-            "     \"addresses\" : [          (array of string) array of pivx addresses\n"
-            "     \"pivxaddress\"            (string) pivx address\n"
+            "     \"addresses\" : [          (array of string) array of encocoin addresses\n"
+            "     \"encocoinaddress\"            (string) encocoin address\n"
             "        ,...\n"
             "     ]\n"
             "  },\n"
@@ -1199,7 +1215,7 @@ UniValue reconsiderblock(const JSONRPCRequest& request)
 
 UniValue findserial(const JSONRPCRequest& request)
 {
-    if(request.fHelp || request.params.size() != 1)
+    if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
             "findserial \"serial\"\n"
             "\nSearches the zerocoin database for a zerocoin spend transaction that contains the specified serial\n"
@@ -1340,7 +1356,7 @@ UniValue getserials(const JSONRPCRequest& request) {
                         }
                         libzerocoin::ZerocoinParams *params = Params().GetConsensus().Zerocoin_Params(false);
                         PublicCoinSpend publicSpend(params);
-                        if (!ZPIVModule::parseCoinSpend(txin, tx, prevOut, publicSpend)) {
+                        if (!ZXNKModule::parseCoinSpend(txin, tx, prevOut, publicSpend)) {
                             throw JSONRPCError(RPC_INTERNAL_ERROR, "public zerocoin spend parse failed");
                         }
                         serial_str = publicSpend.getCoinSerialNumber().ToString(16);
@@ -1409,9 +1425,9 @@ UniValue getblockindexstats(const JSONRPCRequest& request) {
                 "        \"denom_5\": xxxx           (numeric) number of PUBLIC spends of denom_5 occurred over the block range\n"
                 "         ...                    ... number of PUBLIC spends of other denominations: ..., 10, 50, 100, 500, 1000, 5000\n"
                 "  }\n"
-                "  \"txbytes\": xxxxx                (numeric) Sum of the size of all txes (zPIV excluded) over block range\n"
-                "  \"ttlfee\": xxxxx                 (numeric) Sum of the fee amount of all txes (zPIV mints excluded) over block range\n"
-                "  \"ttlfee_all\": xxxxx             (numeric) Sum of the fee amount of all txes (zPIV mints included) over block range\n"
+                "  \"txbytes\": xxxxx                (numeric) Sum of the size of all txes (zXNK excluded) over block range\n"
+                "  \"ttlfee\": xxxxx                 (numeric) Sum of the fee amount of all txes (zXNK mints excluded) over block range\n"
+                "  \"ttlfee_all\": xxxxx             (numeric) Sum of the fee amount of all txes (zXNK mints included) over block range\n"
                 "  \"feeperkb\": xxxxx               (numeric) Average fee per kb (excluding zc txes)\n"
                 "}\n"
 
@@ -1542,4 +1558,3 @@ UniValue getblockindexstats(const JSONRPCRequest& request) {
     return ret;
 
 }
-

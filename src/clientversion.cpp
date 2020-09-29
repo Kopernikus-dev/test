@@ -1,5 +1,5 @@
 // Copyright (c) 2012-2017 The Bitcoin Core developers
-// Copyright (c) 2016-2019 The PIVX developers
+// Copyright (c) 2016-2019 The EncoCoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,10 +10,10 @@
 
 /**
  * Name of client reported in the 'version' message. Report the same name
- * for both pivxd and pivx-qt, to make it harder for attackers to
+ * for both encocoind and encocoin-qt, to make it harder for attackers to
  * target servers or GUI users specifically.
  */
-const std::string CLIENT_NAME("PIVX Core");
+const std::string CLIENT_NAME("EncoCoin Core");
 
 /**
  * Client version number
@@ -45,8 +45,8 @@ const std::string CLIENT_NAME("PIVX Core");
 //! git will put "#define GIT_ARCHIVE 1" on the next line inside archives. 
 #define GIT_ARCHIVE 1
 #ifdef GIT_ARCHIVE
-#define GIT_COMMIT_ID "1ff92c01f008817c21d2bded7c6f73e2d7ea64d9"
-#define GIT_COMMIT_DATE "Sun, 27 Sep 2020 02:02:41 -0700"
+#define GIT_COMMIT_ID "6468255ab3ada05534165d5a04500f1ae53748ff"
+#define GIT_COMMIT_DATE "Mon, 15 Jun 2020 21:28:35 +0200"
 #endif
 
 #define BUILD_DESC_WITH_SUFFIX(maj, min, rev, build, suffix) \

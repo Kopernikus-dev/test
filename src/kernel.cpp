@@ -2,9 +2,9 @@
 // Copyright (c) 2013-2014 The NovaCoin Developers
 // Copyright (c) 2014-2018 The BlackCoin Developers
 // Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #include "kernel.h"
 
 #include "db.h"
@@ -14,8 +14,8 @@
 #include "policy/policy.h"
 #include "stakeinput.h"
 #include "utilmoneystr.h"
-#include "zpivchain.h"
-#include "zpiv/zpos.h"
+#include "zxnkchain.h"
+#include "zxnk/zpos.h"
 
 #include <boost/assign/list_of.hpp>
 
@@ -108,8 +108,8 @@ bool LoadStakeInput(const CBlock& block, const CBlockIndex* pindexPrev, std::uni
     // Construct the stakeinput object
     const CTxIn& txin = block.vtx[1].vin[0];
     stake = txin.IsZerocoinSpend() ?
-            std::unique_ptr<CStakeInput>(new CLegacyZPivStake()) :
-            std::unique_ptr<CStakeInput>(new CPivStake());
+            std::unique_ptr<CStakeInput>(new CLegacyZXnkStake()) :
+            std::unique_ptr<CStakeInput>(new CXnkStake());
 
     return stake->InitFromTxIn(txin);
 }
@@ -173,7 +173,7 @@ bool CheckProofOfStake(const CBlock& block, std::string& strError, const CBlockI
     }
 
     // zPoS disabled (ContextCheck) before blocks V7, and the tx input signature is in CoinSpend
-    if (stakeInput->IsZPIV()) return true;
+    if (stakeInput->IsZXNK()) return true;
 
     // Verify tx input signature
     CTxOut stakePrevout;
@@ -193,6 +193,7 @@ bool CheckProofOfStake(const CBlock& block, std::string& strError, const CBlockI
     // All good
     return true;
 }
+
 
 
 /*
@@ -215,4 +216,3 @@ bool GetStakeKernelHash(uint256& hashRet, const CBlock& block, const CBlockIndex
     hashRet = stakeKernel.GetHash();
     return true;
 }
-

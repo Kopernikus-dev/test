@@ -1,14 +1,15 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #ifndef BITCOIN_PRIMITIVES_TRANSACTION_H
 #define BITCOIN_PRIMITIVES_TRANSACTION_H
 
 #include "amount.h"
 #include "memusage.h"
+#include "libzerocoin/CoinSpend.h"
 #include "script/script.h"
 #include "serialize.h"
 #include "uint256.h"
@@ -16,7 +17,6 @@
 #include <list>
 
 class CTransaction;
-
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
 {

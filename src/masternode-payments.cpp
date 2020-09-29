@@ -1,8 +1,8 @@
 // Copyright (c) 2014-2015 The Dash developers
 // Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #include "masternode-payments.h"
 #include "addrman.h"
 #include "chainparams.h"
@@ -296,14 +296,14 @@ bool IsBlockPayeeValid(const CBlock& block, int nBlockHeight)
 }
 
 
-void FillBlockPayee(CMutableTransaction& txNew, const CBlockIndex* pindexPrev, bool fProofOfStake)
+ void FillBlockPayee(CMutableTransaction& txNew, const CBlockIndex* pindexPrev, bool fProofOfStake)
 {
     if (!pindexPrev) return;
 
     if (sporkManager.IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(pindexPrev->nHeight + 1)) {
         budget.FillBlockPayee(txNew, fProofOfStake);
     } else {
-        masternodePayments.FillBlockPayee(txNew, pindexPrev, fProofOfStake);
+       masternodePayments.FillBlockPayee(txNew, pindexPrev, fProofOfStake);
     }
 }
 
@@ -316,7 +316,7 @@ std::string GetRequiredPaymentsString(int nBlockHeight)
     }
 }
 
-void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, const CBlockIndex* pindexPrev, bool fProofOfStake)
+ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, const CBlockIndex* pindexPrev, bool fProofOfStake)
 {
     if (!pindexPrev) return;
 
@@ -336,7 +336,7 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, const CBloc
     }
 
     if (hasPayment) {
-        CAmount masternodePayment = GetMasternodePayment();
+        CAmount masternodePayment = GetMasternodePayment(pindexPrev->nHeight, GetBlockValue(pindexPrev->nHeight), 0);
         if (fProofOfStake) {
             /**For Proof Of Stake vout[0] must be null
              * Stake reward can be split into many different outputs, so we must
@@ -395,8 +395,8 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
         if (Params().NetworkID() == CBaseChainParams::MAIN) {
             if (pfrom->HasFulfilledRequest(NetMsgType::GETMNWINNERS)) {
                 LogPrintf("CMasternodePayments::ProcessMessageMasternodePayments() : mnget - peer already asked me for the list\n");
-                LOCK(cs_main);
                 Misbehaving(pfrom->GetId(), 20);
+                LOCK(cs_main);
                 return;
             }
         }
@@ -541,8 +541,32 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
 {
     LOCK(cs_vecPayments);
 
-    //require at least 6 signatures
     int nMaxSignatures = 0;
+    int nMasternode_Drift_Count = 0;
+
+    std::string strPayeesPossible = "";
+
+    // 100 blocks transition period for smoothness
+    CAmount prevReward = GetBlockValue((nBlockHeight > 51) ? (nBlockHeight - 50) : nBlockHeight);
+    CAmount nextReward = GetBlockValue(nBlockHeight + 50);
+    const int mn_count_drift = Params().GetConsensus().nMasternodeCountDrift;
+    
+    if (sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)) {
+        // Get a stable number of masternodes by ignoring newly activated (< 8000 sec old) masternodes
+        nMasternode_Drift_Count = mnodeman.stable_size() + mn_count_drift;
+    }
+    else {
+        //account for the fact that all peers do not see the same masternode count. A allowance of being off our masternode count is given
+        //we only need to look at an increased masternode count because as count increases, the reward decreases. This code only checks
+        //for mnPayment >= required, so it only makes sense to check the max node count allowed.
+        nMasternode_Drift_Count = mnodeman.size() + mn_count_drift;
+    }
+
+    // 100 blocks transition period for smoothness
+    CAmount prevMasternodePayment = GetMasternodePayment(((nBlockHeight > 51) ? (nBlockHeight - 50) : nBlockHeight), prevReward, nMasternode_Drift_Count);
+    CAmount nextMasternodePayment = GetMasternodePayment(nBlockHeight + 50, nextReward, nMasternode_Drift_Count);
+
+    //require at least 6 signatures
     for (CMasternodePayee& payee : vecPayments)
         if (payee.nVotes >= nMaxSignatures && payee.nVotes >= MNPAYMENTS_SIGNATURES_REQUIRED)
             nMaxSignatures = payee.nVotes;
@@ -550,18 +574,15 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
     // if we don't have at least 6 signatures on a payee, approve whichever is the longest chain
     if (nMaxSignatures < MNPAYMENTS_SIGNATURES_REQUIRED) return true;
 
-    std::string strPayeesPossible = "";
-    CAmount requiredMasternodePayment = GetMasternodePayment();
-
     for (CMasternodePayee& payee : vecPayments) {
         bool found = false;
         for (CTxOut out : txNew.vout) {
             if (payee.scriptPubKey == out.scriptPubKey) {
-                if(out.nValue == requiredMasternodePayment)
+                if(out.nValue == prevMasternodePayment || out.nValue == nextMasternodePayment)
                     found = true;
                 else
-                    LogPrintf("%s : Masternode payment value (%s) different from required value (%s).\n",
-                            __func__, FormatMoney(out.nValue).c_str(), FormatMoney(requiredMasternodePayment).c_str());
+                    LogPrintf("%s : Masternode payment value (%s) different from required value (%s or %s).\n",
+                            __func__, FormatMoney(out.nValue).c_str(), FormatMoney(prevMasternodePayment).c_str(), FormatMoney(nextMasternodePayment).c_str());
             }
         }
 
@@ -578,7 +599,7 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
         }
     }
 
-    LogPrint(BCLog::MASTERNODE,"CMasternodePayments::IsTransactionValid - Missing required payment of %s to %s\n", FormatMoney(requiredMasternodePayment).c_str(), strPayeesPossible.c_str());
+    LogPrint(BCLog::MASTERNODE,"CMasternodePayments::IsTransactionValid - Missing required payment of %s to %s\n", FormatMoney(prevMasternodePayment).c_str(), strPayeesPossible.c_str());
     return false;
 }
 

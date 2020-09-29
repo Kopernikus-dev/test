@@ -1,9 +1,9 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
 // Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #include "coincontroldialog.h"
 #include "ui_coincontroldialog.h"
 
@@ -18,7 +18,7 @@
 #include "main.h"
 #include "wallet/wallet.h"
 
-#include "qt/pivx/qtutils.h"
+#include "qt/encocoin/qtutils.h"
 
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
 
@@ -687,7 +687,7 @@ void CoinControlDialog::updateLabels()
     }
 
     // actually update labels
-    int nDisplayUnit = BitcoinUnits::PIV;
+    int nDisplayUnit = BitcoinUnits::XNK;
     if (model && model->getOptionsModel())
         nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
 
@@ -715,7 +715,7 @@ void CoinControlDialog::updateLabels()
 
     // turn labels "red"
     ui->labelCoinControlBytes->setStyleSheet((nBytes >= MAX_FREE_TRANSACTION_CREATE_SIZE) ? "color:red;" : "");     // Bytes >= 1000
-    ui->labelCoinControlLowOutput->setStyleSheet((fDust) ? "color:red;" : "");                                      // Dust = "yes"
+    ui->labelCoinControlLowOutput->setStyleSheet((fDust) ? "color:red;" : "");  
 
     // tool tips
     QString toolTip1 = tr("This label turns red, if the transaction size is greater than 1000 bytes.") + "<br /><br />";
@@ -732,8 +732,8 @@ void CoinControlDialog::updateLabels()
     double dFeeVary;
     if (payTxFee.GetFeePerK() > 0)
         dFeeVary = (double)std::max(CWallet::GetRequiredFee(1000), payTxFee.GetFeePerK()) / 1000;
-    else
-        dFeeVary = (double)std::max(CWallet::GetRequiredFee(1000), mempool.estimateSmartFee(nTxConfirmTarget).GetFeePerK()) / 1000;
+      else
+         dFeeVary = (double)std::max(CWallet::GetRequiredFee(1000), mempool.estimateSmartFee(nTxConfirmTarget).GetFeePerK()) / 1000;
     QString toolTip4 = tr("Can vary +/- %1 u%2 per input.").arg(dFeeVary).arg(CURRENCY_UNIT.c_str());
 
     ui->labelCoinControlFee->setToolTip(toolTip4);
@@ -840,7 +840,7 @@ void CoinControlDialog::updateView()
             if (haveDest) {
                 sAddress = QString::fromStdString(EncodeDestination(outputAddress));
 
-                // if listMode or change => show PIVX address. In tree mode, address is not shown again for direct wallet address outputs
+                // if listMode or change => show EncoCoin address. In tree mode, address is not shown again for direct wallet address outputs
                 if (!treeMode || (!(sAddress == sWalletAddress)))
                     itemOutput->setText(COLUMN_ADDRESS, sAddress);
                 else

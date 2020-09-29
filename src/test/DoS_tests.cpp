@@ -1,8 +1,8 @@
 // Copyright (c) 2011-2014 The Bitcoin Core developers
-// Copyright (c) 2019 The PIVX developers
+// Copyright (c) 2019-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 //
 // Unit tests for denial-of-service detection/prevention code
 //
@@ -17,7 +17,7 @@
 #include "serialize.h"
 #include "util.h"
 
-#include "test/test_pivx.h"
+#include "test/test_encocoin.h"
 
 #include <stdint.h>
 
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
     SendMessages(&dummyNode2, *connman, interruptDummy);
     BOOST_CHECK(!connman->IsBanned(addr2)); // 2 not banned yet...
     BOOST_CHECK(connman->IsBanned(addr1));  // ... but 1 still should be
-    misbehave(dummyNode2.GetId(), 50);
+    Misbehaving(dummyNode2.GetId(), 50);
     SendMessages(&dummyNode2, *connman, interruptDummy);
     BOOST_CHECK(connman->IsBanned(addr2));
 }

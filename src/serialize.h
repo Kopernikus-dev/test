@@ -1,11 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2015-2019 The PIVX developers
+// Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#ifndef PIVX_SERIALIZE_H
-#define PIVX_SERIALIZE_H
+#ifndef EncoCoin_SERIALIZE_H
+#define EncoCoin_SERIALIZE_H
 
 #include <algorithm>
 #include <array>
@@ -25,7 +25,6 @@
 #include "libzerocoin/SpendType.h"
 #include "prevector.h"
 #include "sporkid.h"
-
 
 static const unsigned int MAX_SIZE = 0x02000000;
 
@@ -614,7 +613,7 @@ template<typename Stream, typename K, typename Pred, typename A> void Unserializ
 template <typename Stream, typename T>
 inline void Serialize(Stream& os, const T& a)
 {
-    a.Serialize(os);
+   a.Serialize(os);
 }
 
 template <typename Stream, typename T>
@@ -992,4 +991,4 @@ size_t GetSerializeSize(const S& s, const T& t)
     return (CSizeComputer(s.GetType(), s.GetVersion()) << t).size();
 }
 
-#endif // PIVX_SERIALIZE_H
+#endif // EncoCoin_SERIALIZE_H

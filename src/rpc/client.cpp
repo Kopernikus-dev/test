@@ -2,6 +2,7 @@
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
 // Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,7 +17,6 @@
 
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <univalue.h>
-
 
 class CRPCConvertParam
 {
@@ -144,6 +144,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
         {"setstakesplitthreshold", 0},
         {"autocombinerewards", 0},
         {"autocombinerewards", 1},
+/*
         {"getzerocoinbalance", 0},
         {"listmintedzerocoins", 0},
         {"listmintedzerocoins", 1},
@@ -159,11 +160,12 @@ static const CRPCConvertParam vRPCConvertParams[] =
         {"exportzerocoins", 1},
         {"resetmintzerocoin", 0},
         {"getspentzerocoinamount", 1},
+*/
         {"generatemintlist", 0},
         {"generatemintlist", 1},
-        {"searchdzpiv", 0},
-        {"searchdzpiv", 1},
-        {"searchdzpiv", 2},
+        {"searchdzxnk", 0},
+        {"searchdzxnk", 1},
+        {"searchdzxnk", 2},
         {"getmintsvalues", 2},
         {"enableautomintaddress", 0},
         {"getblockindexstats", 0},

@@ -13,9 +13,9 @@ if [ -n "${1:-}" ]; then
     PARAMS_DIR="$1"
 else
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        PARAMS_DIR="$HOME/Library/Application Support/PIVXParams"
+        PARAMS_DIR="$HOME/Library/Application Support/EncoCoinParams"
     else
-        PARAMS_DIR="$HOME/.pivx-params"
+        PARAMS_DIR="$HOME/.encocoin-params"
     fi
 fi
 
@@ -48,7 +48,6 @@ function fetch_wget {
     local dlname="$2"
 
     cat <<EOF
-
 Retrieving (wget): $DOWNLOAD_URL/$filename
 EOF
 
@@ -69,7 +68,6 @@ function fetch_ipfs {
     local dlname="$2"
 
     cat <<EOF
-
 Retrieving (ipfs): $IPFS_HASH/$filename
 EOF
 
@@ -85,7 +83,6 @@ function fetch_curl {
     local dlname="$2"
 
     cat <<EOF
-
 Retrieving (curl): $DOWNLOAD_URL/$filename
 EOF
 
@@ -98,14 +95,11 @@ EOF
 
 function fetch_failure {
     cat >&2 <<EOF
-
-Failed to fetch the PIVX zkSNARK parameters!
+Failed to fetch the EncoCoin zkSNARK parameters!
 Try installing one of the following programs and make sure you're online:
-
  * ipfs
  * wget
  * curl
-
 EOF
     exit 1
 }
@@ -184,11 +178,9 @@ function main() {
     || exit_locked_error
 
     cat <<EOF
-PIVX - fetch-params.sh
-
-This script will fetch the PIVX zkSNARK parameters and verify their
+EncoCoin - fetch-params.sh
+This script will fetch the EncoCoin zkSNARK parameters and verify their
 integrity with sha256sum.
-
 If they already exist locally, it will exit now and do nothing else.
 EOF
 
@@ -198,7 +190,7 @@ EOF
         mkdir -p "$PARAMS_DIR"
         README_PATH="$PARAMS_DIR/README"
         cat >> "$README_PATH" <<EOF
-This directory stores common PIVX zkSNARK parameters. Note that it is
+This directory stores common EncoCoin zkSNARK parameters. Note that it is
 distinct from the daemon's -datadir argument because the parameters are
 large and may be shared across multiple distinct -datadir's such as when
 setting up test networks.
@@ -212,10 +204,8 @@ accordingly for your bandwidth constraints. If the Sprout parameters are
 already present the additional Sapling parameters required are just under
 800MB in size. If the files are already present and have the correct
 sha256sum, no networking is used.
-
 Creating params directory. For details about this directory, see:
 $README_PATH
-
 EOF
     fi
 

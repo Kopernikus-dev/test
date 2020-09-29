@@ -2,11 +2,12 @@
 // Copyright (c) 2013-2014 The NovaCoin Developers
 // Copyright (c) 2014-2018 The BlackCoin Developers
 // Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2020	   The EncoCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIVX_KERNEL_H
-#define PIVX_KERNEL_H
+#ifndef ENCOCOIN_KERNEL_H
+#define ENCOCOIN_KERNEL_H
 
 #include "main.h"
 #include "stakeinput.h"
@@ -75,4 +76,4 @@ bool CheckProofOfStake(const CBlock& block, std::string& strError, const CBlockI
  */
 bool GetStakeKernelHash(uint256& hashRet, const CBlock& block, const CBlockIndex* pindexPrev = nullptr);
 
-#endif // PIVX_KERNEL_H
+#endif // ENCOCOIN_KERNEL_H

@@ -1,17 +1,18 @@
 // Copyright (c) 2019-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#include "qt/encocoin/masternodeswidget.h"
+#include "qt/encocoin/forms/ui_masternodeswidget.h"
 
-#include "qt/pivx/masternodeswidget.h"
-#include "qt/pivx/forms/ui_masternodeswidget.h"
-
-#include "qt/pivx/qtutils.h"
-#include "qt/pivx/mnrow.h"
-#include "qt/pivx/mninfodialog.h"
-#include "qt/pivx/masternodewizarddialog.h"
+#include "qt/encocoin/qtutils.h"
+#include "qt/encocoin/mnrow.h"
+#include "qt/encocoin/mninfodialog.h"
+#include "qt/encocoin/masternodewizarddialog.h"
 
 #include "activemasternode.h"
 #include "clientmodel.h"
+#include "collateral.h"
 #include "fs.h"
 #include "guiutil.h"
 #include "init.h"
@@ -22,7 +23,7 @@
 #include "wallet/wallet.h"
 #include "askpassphrasedialog.h"
 #include "util.h"
-#include "qt/pivx/optionbutton.h"
+#include "qt/encocoin/optionbutton.h"
 #include <iostream>
 #include <fstream>
 
@@ -65,7 +66,7 @@ public:
     MNRow* cachedRow = nullptr;
 };
 
-MasterNodesWidget::MasterNodesWidget(PIVXGUI *parent) :
+MasterNodesWidget::MasterNodesWidget(EncoCoinGUI *parent) :
     PWidget(parent),
     ui(new Ui::MasterNodesWidget),
     isLoading(false)
@@ -126,8 +127,8 @@ MasterNodesWidget::MasterNodesWidget(PIVXGUI *parent) :
         onStartAllClicked(REQUEST_START_MISSING);
     });
     connect(ui->listMn, &QListView::clicked, this, &MasterNodesWidget::onMNClicked);
-    connect(ui->btnAbout, &OptionButton::clicked, [this](){window->openFAQ(9);});
-    connect(ui->btnAboutController, &OptionButton::clicked, [this](){window->openFAQ(10);});
+    connect(ui->btnAbout, &OptionButton::clicked, [this](){window->openFAQ(5);});
+    connect(ui->btnAboutController, &OptionButton::clicked, [this](){window->openFAQ(6);});
 }
 
 void MasterNodesWidget::showEvent(QShowEvent *event)
@@ -194,7 +195,7 @@ void MasterNodesWidget::onMNClicked(const QModelIndex &index)
 
 bool MasterNodesWidget::checkMNsNetwork()
 {
-    bool isTierTwoSync = mnModel->isMNsNetworkSynced();
+    bool isTierTwoSync = true;
     if (!isTierTwoSync) inform(tr("Please wait until the node is fully synced"));
     return isTierTwoSync;
 }
@@ -350,7 +351,7 @@ void MasterNodesWidget::onInfoMNClicked()
     if (dialog->exportMN) {
         if (ask(tr("Remote Masternode Data"),
                 tr("You are just about to export the required data to run a Masternode\non a remote server to your clipboard.\n\n\n"
-                   "You will only have to paste the data in the pivx.conf file\nof your remote server and start it, "
+                   "You will only have to paste the data in the encocoin.conf file\nof your remote server and start it, "
                    "then start the Masternode using\nthis controller wallet (select the Masternode in the list and press \"start\").\n"
                 ))) {
             // export data
@@ -428,7 +429,7 @@ void MasterNodesWidget::onDeleteMNClicked()
         if (lineCopy.size() == 0) {
             lineCopy = "# Masternode config file\n"
                                     "# Format: alias IP:port masternodeprivkey collateral_output_txid collateral_output_index\n"
-                                    "# Example: mn1 127.0.0.2:51472 93HaYBVUCYjEMeeH1Y4sBGLALQZE1Yc1K64xiqgX37tGBDQL8Xg 2bcd3c84c84f87eaa86e4e56834c92927a07f9e18718810b92e0d0324456a67c 0\n";
+                                    "# Example: mn1 127.0.0.2:43013 93HaYBVUCYjEMeeH1Y4sBGLALQZE1Yc1K64xiqgX37tGBDQL8Xg 2bcd3c84c84f87eaa86e4e56834c92927a07f9e18718810b92e0d0324456a67c 0\n";
         }
 
         streamConfig.close();
@@ -476,8 +477,8 @@ void MasterNodesWidget::onCreateMNClicked()
         return;
     }
 
-    if (walletModel->getBalance() <= (COIN * 10000)) {
-        inform(tr("Not enough balance to create a masternode, 10,000 %1 required.").arg(CURRENCY_UNIT.c_str()));
+    if (walletModel->getBalance() <= CollateralRequired(chainActive.Height())) {
+        inform(tr("Not enough balance to create a masternode")); //, 10,000 %1 required.").arg(CURRENCY_UNIT.c_str()));
         return;
     }
     showHideOp(true);

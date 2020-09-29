@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "test/test_pivx.h"
+#include "test/test_encocoin.h"
 
 #include "sapling/address.hpp"
 #include "sapling/note.hpp"
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(testVectors) {
 
 BOOST_AUTO_TEST_CASE(random) {
     using namespace libzcash;
-    CAmount MAX_MONEY_OUT = 21000000 * COIN;
+    CAmount MAX_MONEY_OUT = 60000000 * COIN;
     // Test creating random notes using the same spending key
     auto address = SaplingSpendingKey::random().default_address();
     SaplingNote note1(address, GetRand(MAX_MONEY_OUT));

@@ -1,9 +1,9 @@
-// Copyright (c) 2020 The PIVX developers
+// Copyright (c) 2020 The PIVX Core developers
+// Copyright (c) 2020 The Encocoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#ifndef PIVX_HDCHAIN_H
-#define PIVX_HDCHAIN_H
+#ifndef ENCOCOIN_HDCHAIN_H
+#define ENCOCOIN_HDCHAIN_H
 
 #include "key.h"
 
@@ -37,7 +37,7 @@ public:
     // Chain counter type
     uint8_t chainType;
 
-    CHDChain(const uint8_t& _chainType = HDChain::ChainCounterType::Standard) : chainType(_chainType) { SetNull(); }
+     CHDChain(const uint8_t& _chainType = HDChain::ChainCounterType::Standard) : chainType(_chainType) { SetNull(); }
 
     ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
@@ -72,4 +72,4 @@ public:
     }
 };
 
-#endif // PIVX_HDCHAIN_H
+#endif // ENCOCOIN_HDCHAIN_H

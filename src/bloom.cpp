@@ -1,8 +1,8 @@
 // Copyright (c) 2012-2014 The Bitcoin developers
-// Copyright (c) 2017-2019 The PIVX developers
+// Copyright (c) 2017-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #include "bloom.h"
 
 
@@ -142,7 +142,7 @@ bool CBloomFilter::IsWithinSizeConstraints() const
 }
 
 /**
- * Returns true if this filter will match anything. See {@link org.pivxj.core.BloomFilter#setMatchAll()}
+ * Returns true if this filter will match anything. See {@link org.encocoinj.core.BloomFilter#setMatchAll()}
  * for when this can be a useful thing to do.
  */
 bool CBloomFilter::MatchesAll() const {
@@ -261,6 +261,7 @@ void CBloomFilter::UpdateEmptyFull()
     isFull = full;
     isEmpty = empty;
 }
+
 
 CRollingBloomFilter::CRollingBloomFilter(unsigned int nElements, double fpRate) :
     b1(nElements * 2, fpRate, 0), b2(nElements * 2, fpRate, 0)

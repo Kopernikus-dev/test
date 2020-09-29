@@ -1,9 +1,9 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2016-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #ifndef BITCOIN_COINS_H
 #define BITCOIN_COINS_H
 
@@ -21,7 +21,7 @@
 
 /**
  * A UTXO entry.
- *
+ * 
  * Serialized format:
  * - VARINT((coinbase ? 2 : 0) | (coinstake ? 1 : 0) | (height << 2))
  * - the non-spent CTxOut (via CTxOutCompressor)
@@ -69,7 +69,7 @@ public:
         uint32_t code = nHeight * 4 + (fCoinBase ? 2 : 0) + (fCoinStake ? 1 : 0);
         ::Serialize(s, VARINT(code));
         ::Serialize(s, CTxOutCompressor(REF(out)));
-    }
+	}
 
     template<typename Stream>
     void Unserialize(Stream &s) {
@@ -207,9 +207,9 @@ protected:
     mutable uint256 hashBlock;
     mutable CCoinsMap cacheCoins;
 
+
     /* Cached dynamic memory usage for the inner Coin objects. */
     mutable size_t cachedCoinsUsage;
-
 public:
     CCoinsViewCache(CCoinsView *baseIn);
 
@@ -266,7 +266,7 @@ public:
     size_t DynamicMemoryUsage() const;
 
     /** 
-     * Amount of pivx coming in to a transaction
+     * Amount of encocoin coming in to a transaction
      * Note that lightweight clients may not know anything besides the hash of previous transactions,
      * so may not be able to calculate this.
      *

@@ -1,12 +1,12 @@
-// Copyright (c) 2019 The PIVX developers
+// Copyright (c) 2019 The EncoCoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "qt/pivx/settings/settingswalletrepairwidget.h"
-#include "qt/pivx/settings/forms/ui_settingswalletrepairwidget.h"
-#include "qt/pivx/qtutils.h"
+#include "qt/encocoin/settings/settingswalletrepairwidget.h"
+#include "qt/encocoin/settings/forms/ui_settingswalletrepairwidget.h"
+#include "qt/encocoin/qtutils.h"
 
-SettingsWalletRepairWidget::SettingsWalletRepairWidget(PIVXGUI* _window, QWidget *parent) :
+SettingsWalletRepairWidget::SettingsWalletRepairWidget(EncoCoinGUI* _window, QWidget *parent) :
     PWidget(_window, parent),
     ui(new Ui::SettingsWalletRepairWidget)
 {
@@ -32,6 +32,7 @@ SettingsWalletRepairWidget::SettingsWalletRepairWidget(PIVXGUI* _window, QWidget
     setCssProperty({ui->pushButtonSalvage, ui->pushButtonRescan, ui->pushButtonRecover1,
                     ui->pushButtonRecover2, ui->pushButtonUpgrade, ui->pushButtonRebuild,
                     ui->pushButtonDelete}, "btn-primary");
+
 
     // Wallet Repair Buttons
     connect(ui->pushButtonSalvage, &QPushButton::clicked, this, &SettingsWalletRepairWidget::walletSalvage);
@@ -118,7 +119,7 @@ void SettingsWalletRepairWidget::buildParameterlist(QString arg)
     // Append repair parameter to command line.
     args.append(arg);
 
-    // Send command-line arguments to PIVXGUI::handleRestart()
+    // Send command-line arguments to EncoCoinGUI::handleRestart()
     Q_EMIT handleRestart(args);
 }
 

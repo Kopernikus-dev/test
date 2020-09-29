@@ -1,6 +1,7 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
 // Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,7 +28,6 @@
 #include <QDebug>
 #include <QSet>
 #include <QTimer>
-
 
 WalletModel::WalletModel(CWallet* wallet, OptionsModel* optionsModel, QObject* parent) : QObject(parent), wallet(wallet), walletWrapper(*wallet),
                                                                                          optionsModel(optionsModel),
@@ -64,12 +64,12 @@ bool WalletModel::isRegTestNetwork() const
     return Params().IsRegTestNet();
 }
 
-bool WalletModel::isColdStakingNetworkelyEnabled() const
+bool WalletModel::isColdStakingNetworkelyEnabled() const 
 {
     return sporkManager.IsSporkActive(SPORK_17_COLDSTAKING_ENFORCEMENT);
 }
 
-bool WalletModel::isStakingStatusActive() const
+bool WalletModel::isStakingStatusActive() const 
 {
     return wallet->pStakerStatus->IsActive();
 }
@@ -154,7 +154,7 @@ void WalletModel::updateStatus()
         Q_EMIT encryptionStatusChanged(newEncryptionStatus);
 }
 
-bool WalletModel::isWalletUnlocked() const
+bool WalletModel::isWalletUnlocked() const 
 {
     EncryptionStatus status = getEncryptionStatus();
     return (status == Unencrypted || status == Unlocked);
@@ -166,7 +166,7 @@ bool WalletModel::isWalletLocked(bool fFullUnlocked) const
     return (status == Locked || (!fFullUnlocked && status == UnlockedForStaking));
 }
 
-bool IsImportingOrReindexing()
+bool IsImportingOrReindexing() 
 {
     return fImporting || fReindex;
 }
@@ -339,7 +339,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
                 return InvalidAmount;
             }
             total += subtotal;
-        } else { // User-entered pivx address / amount:
+        } else { // User-entered encocoin address / amount:
             if (!validateAddress(rcp.address, rcp.isP2CS)) {
                 return InvalidAddress;
             }
@@ -475,7 +475,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction& tran
                 std::string value;
                 rcp.paymentRequest.SerializeToString(&value);
                 newTx->vOrderForm.push_back(std::make_pair(key, value));
-            } else if (!rcp.message.isEmpty()) // Message from normal pivx:URI (pivx:XyZ...?message=example)
+            } else if (!rcp.message.isEmpty()) // Message from normal encocoin:URI (encocoin:XyZ...?message=example)
             {
                 newTx->vOrderForm.push_back(std::make_pair("Message", rcp.message.toStdString()));
             }
@@ -788,22 +788,22 @@ PairResult WalletModel::getNewStakingAddress(Destination& ret,std::string label)
     return res;
 }
 
-bool WalletModel::whitelistAddressFromColdStaking(const QString &addressStr)
+bool WalletModel::whitelistAddressFromColdStaking(const QString &addressStr) 
 {
     return updateAddressBookPurpose(addressStr, AddressBook::AddressBookPurpose::DELEGATOR);
 }
 
-bool WalletModel::blacklistAddressFromColdStaking(const QString &addressStr)
+bool WalletModel::blacklistAddressFromColdStaking(const QString &addressStr) 
 {
     return updateAddressBookPurpose(addressStr, AddressBook::AddressBookPurpose::DELEGABLE);
 }
 
 bool WalletModel::updateAddressBookPurpose(const QString &addressStr, const std::string& purpose)
-{
+ {
     bool isStaking = false;
     CTxDestination address = DecodeDestination(addressStr.toStdString(), isStaking);
     if (isStaking)
-        return error("Invalid PIVX address, cold staking address");
+        return error("Invalid EncoCoin address, cold staking address");
     CKeyID keyID;
     if (!getKeyId(address, keyID))
         return false;
@@ -813,17 +813,17 @@ bool WalletModel::updateAddressBookPurpose(const QString &addressStr, const std:
 bool WalletModel::getKeyId(const CTxDestination& address, CKeyID& keyID)
 {
     if (!IsValidDestination(address))
-        return error("Invalid PIVX address");
+        return error("Invalid EncoCoin address");
 
     const CKeyID* inKeyID = boost::get<CKeyID>(&address);
     if (!inKeyID)
-        return error("Unable to get KeyID from PIVX address");
+        return error("Unable to get KeyID from EncoCoin address");
 
     keyID = *inKeyID;
     return true;
 }
 
-std::string WalletModel::getLabelForAddress(const CTxDestination& address)
+std::string WalletModel::getLabelForAddress(const CTxDestination& address) 
 {
     std::string label = "";
     {
@@ -850,7 +850,7 @@ void WalletModel::getOutputs(const std::vector<COutPoint>& vOutpoints, std::vect
     }
 }
 
-// returns a COutPoint of 10000 PIV if found
+// returns a COutPoint of 10000 XNK if found
 bool WalletModel::getMNCollateralCandidate(COutPoint& outPoint)
 {
     std::vector<COutput> vCoins;

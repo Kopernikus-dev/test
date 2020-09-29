@@ -1,14 +1,14 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2017-2019 The PIVX developers
+// Copyright (c) 2017-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #include "amount.h"
 
 #include "tinyformat.h"
 
-const std::string CURRENCY_UNIT = "PIV";
+const std::string CURRENCY_UNIT = "XNK";
 
 CFeeRate::CFeeRate(const CAmount& nFeePaid, size_t nSize)
 {

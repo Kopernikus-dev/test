@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "main.h"
-#include "test_pivx.h"
+#include "test_encocoin.h"
 #include "txmempool.h"
 #include "util.h"
 
@@ -106,9 +106,9 @@ template<int index>
 void CheckSort(CTxMemPool &pool, std::vector<std::string> &sortedOrder)
 {
     BOOST_CHECK_EQUAL(pool.size(), sortedOrder.size());
-    typename CTxMemPool::indexed_transaction_set::nth_index<index>::type::iterator it = pool.mapTx.get<index>().begin();
+     typename CTxMemPool::indexed_transaction_set::nth_index<index>::type::iterator it = pool.mapTx.get<index>().begin();
     int count=0;
-    for (; it != pool.mapTx.get<index>().end(); ++it, ++count) {
+     for (; it != pool.mapTx.get<index>().end(); ++it, ++count) {
         BOOST_CHECK_EQUAL(it->GetTx().GetHash().ToString(), sortedOrder[count]);
     }
 }

@@ -1,29 +1,28 @@
 // Copyright (c) 2019-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#include "qt/pivx/coldstakingwidget.h"
-#include "qt/pivx/forms/ui_coldstakingwidget.h"
-#include "qt/pivx/qtutils.h"
+#include "qt/encocoin/coldstakingwidget.h"
+#include "qt/encocoin/forms/ui_coldstakingwidget.h"
+#include "qt/encocoin/qtutils.h"
 #include "amount.h"
 #include "guiutil.h"
-#include "qt/pivx/requestdialog.h"
-#include "qt/pivx/tooltipmenu.h"
-#include "qt/pivx/furlistrow.h"
-#include "qt/pivx/sendconfirmdialog.h"
-#include "qt/pivx/addnewcontactdialog.h"
-#include "qt/pivx/guitransactionsutils.h"
+#include "qt/encocoin/requestdialog.h"
+#include "qt/encocoin/tooltipmenu.h"
+#include "qt/encocoin/furlistrow.h"
+#include "qt/encocoin/sendconfirmdialog.h"
+#include "qt/encocoin/addnewcontactdialog.h"
+#include "qt/encocoin/guitransactionsutils.h"
 #include "walletmodel.h"
 #include "optionsmodel.h"
 #include "coincontroldialog.h"
 #include "coincontrol.h"
-#include "qt/pivx/csrow.h"
+#include "qt/encocoin/csrow.h"
 
 #define DECORATION_SIZE 70
 #define NUM_ITEMS 3
 #define LOAD_MIN_TIME_INTERVAL 15
 #define REQUEST_LOAD_TASK 1
-
 
 class CSDelegationHolder : public FurListRow<QWidget*>
 {
@@ -71,7 +70,7 @@ private:
     CSRow *cachedRow = nullptr;
 };
 
-ColdStakingWidget::ColdStakingWidget(PIVXGUI* parent) :
+ColdStakingWidget::ColdStakingWidget(EncoCoinGUI* parent) :
     PWidget(parent),
     ui(new Ui::ColdStakingWidget),
     isLoading(false)
@@ -767,11 +766,11 @@ void ColdStakingWidget::onMyStakingAddressesClicked()
                                                   "btn-dropdown" : "ic-arrow"), true);
     ui->listViewStakingAddress->setVisible(isStakingAddressListVisible);
     if (isStakingAddressListVisible) {
-        ui->sortWidget->setVisible(true);
+		ui->sortWidget->setVisible(true);
         ui->rightContainer->removeItem(spacerDiv);
         ui->listViewStakingAddress->update();
     } else {
-        ui->sortWidget->setVisible(false);
+		ui->sortWidget->setVisible(false);
         ui->rightContainer->addItem(spacerDiv);
     }
 }
@@ -816,7 +815,6 @@ void ColdStakingWidget::sortAddresses()
     if (this->addressesFilter)
         this->addressesFilter->sort(sortType, sortOrder);
 }
-
 
 ColdStakingWidget::~ColdStakingWidget()
 {

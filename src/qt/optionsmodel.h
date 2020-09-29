@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2013 The Bitcoin developers
 // Copyright (c) 2017-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,9 +16,8 @@ QT_BEGIN_NAMESPACE
 class QNetworkProxy;
 QT_END_NAMESPACE
 
-/** Interface from Qt to configuration data structure for PIVX client.
-   To Qt, the options are presented as a list with the different options
-   laid out vertically.
+/** Interface from Qt to configuration data structure for EncoCoin client.
+   To Qt, the options are presented as a list with the different options laid out vertically.
    This can be changed to a tree once the settings become sufficiently
    complex.
  */
@@ -52,7 +52,7 @@ public:
         HideCharts,          // bool
         HideZeroBalances,    // bool
         HideOrphans,    // bool
-        AnonymizePivxAmount, //int
+        AnonymizeEncoCoinAmount, //int
         ShowMasternodesTab,  // bool
         Listen,              // bool
         StakeSplitThreshold,    // CAmount (LongLong)

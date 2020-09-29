@@ -1,8 +1,8 @@
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2017-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #include "init.h"
 #include "main.h"
 
@@ -51,8 +51,8 @@ bool IsBudgetCollateralValid(const uint256& nTxCollateralHash, const uint256& nE
         }
         if (fBudgetFinalization) {
             // Collateral for budget finalization
-            // Note: there are still old valid budgets out there, but the check for the new 5 PIV finalization collateral
-            //       will also cover the old 50 PIV finalization collateral.
+            // Note: there are still old valid budgets out there, but the check for the new 5 XNK finalization collateral
+            //       will also cover the old 50 XNK finalization collateral.
             LogPrint(BCLog::MNBUDGET, "Final Budget: o.scriptPubKey(%s) == findScript(%s) ?\n", HexStr(o.scriptPubKey), HexStr(findScript));
             if (o.scriptPubKey == findScript) {
                 LogPrint(BCLog::MNBUDGET, "Final Budget: o.nValue(%ld) >= BUDGET_FEE_TX(%ld) ?\n", o.nValue, BUDGET_FEE_TX);
@@ -645,7 +645,7 @@ TrxValidationStatus CBudgetManager::IsTransactionValid(const CTransaction& txNew
                 LogPrint(BCLog::MNBUDGET,"%s: GetBlockStart() passed\n", __func__);
                 transactionStatus = pfinalizedBudget->IsTransactionValid(txNew, nBlockHeight);
                 if (transactionStatus == TrxValidationStatus::Valid) {
-                    LogPrint(BCLog::MNBUDGET,"%s: pfinalizedBudget->IsTransactionValid() passed\n", __func__);
+                    LogPrint(BCLog::MNBUDGET,"%s: pfinalizedBudget->IsTransactionValid() passed\n", __func__);;
                     return TrxValidationStatus::Valid;
                 }
                 else {
@@ -1704,7 +1704,7 @@ CFinalizedBudget::CFinalizedBudget() :
         strBudgetName(""),
         nBlockStart(0),
         vecBudgetPayments(),
-        nFeeTXHash(),
+        nFeeTXHash(0),
         nTime(0)
 { }
 

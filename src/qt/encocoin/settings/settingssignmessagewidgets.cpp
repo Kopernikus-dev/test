@@ -1,10 +1,11 @@
 // Copyright (c) 2019-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "qt/pivx/settings/settingssignmessagewidgets.h"
-#include "qt/pivx/settings/forms/ui_settingssignmessagewidgets.h"
-#include "qt/pivx/qtutils.h"
+#include "qt/encocoin/settings/settingssignmessagewidgets.h"
+#include "qt/encocoin/settings/forms/ui_settingssignmessagewidgets.h"
+#include "qt/encocoin/qtutils.h"
 #include "guiutil.h"
 #include "walletmodel.h"
 
@@ -19,7 +20,7 @@
 
 #include <QClipboard>
 
-SettingsSignMessageWidgets::SettingsSignMessageWidgets(PIVXGUI* _window, QWidget *parent) :
+SettingsSignMessageWidgets::SettingsSignMessageWidgets(EncoCoinGUI* _window, QWidget *parent) :
     PWidget(_window, parent),
     ui(new Ui::SettingsSignMessageWidgets)
 {
@@ -142,7 +143,7 @@ void SettingsSignMessageWidgets::onPasteButtonSMClicked()
     setAddress_SM(QApplication::clipboard()->text());
 }
 
-void SettingsSignMessageWidgets::onClearAll()
+void SettingsSignMessageWidgets::onClearAll() 
 {
     ui->addressIn_SM->clear();
     ui->signatureOut_SM->clear();
@@ -262,7 +263,7 @@ void SettingsSignMessageWidgets::onVerifyMessage()
 void SettingsSignMessageWidgets::onAddressesClicked()
 {
     int addressSize = walletModel->getAddressTableModel()->sizeRecv();
-    if (addressSize == 0) {
+    if(addressSize == 0) {
         inform(tr("No addresses available, you can go to the receive screen and add some there!"));
         return;
     }
@@ -300,7 +301,7 @@ void SettingsSignMessageWidgets::onAddressesClicked()
 
 void SettingsSignMessageWidgets::resizeMenu()
 {
-    if (menuContacts && menuContacts->isVisible()) {
+    if(menuContacts && menuContacts->isVisible()) {
         int width = ui->containerAddress->width();
         menuContacts->resizeList(width, menuContacts->height());
         menuContacts->resize(width, menuContacts->height());

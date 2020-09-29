@@ -1,8 +1,8 @@
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2020 The EncoCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #include "activemasternode.h"
 #include "db.h"
 #include "init.h"
@@ -14,9 +14,9 @@
 #include "netbase.h"
 #include "rpc/server.h"
 #include "utilmoneystr.h"
+#include "collateral.h"
 
 #include <univalue.h>
-
 #include <boost/tokenizer.hpp>
 
 UniValue listmasternodes(const JSONRPCRequest& request)
@@ -41,7 +41,7 @@ UniValue listmasternodes(const JSONRPCRequest& request)
             "    \"outidx\": n,         (numeric) Collateral transaction output index\n"
             "    \"pubkey\": \"key\",   (string) Masternode public key used for message broadcasting\n"
             "    \"status\": s,         (string) Status (ENABLED/EXPIRED/REMOVE/etc)\n"
-            "    \"addr\": \"addr\",      (string) Masternode PIVX address\n"
+            "    \"addr\": \"addr\",      (string) Masternode EncoCoin address\n"
             "    \"version\": v,        (numeric) Masternode protocol version\n"
             "    \"lastseen\": ttt,     (numeric) The time in seconds since epoch (Jan 1 1970 GMT) of the last seen\n"
             "    \"activetime\": ttt,   (numeric) The time in seconds since epoch (Jan 1 1970 GMT) masternode has been active\n"
@@ -488,7 +488,7 @@ UniValue getmasternodestatus (const JSONRPCRequest& request)
             "  \"txhash\": \"xxxx\",      (string) Collateral transaction hash\n"
             "  \"outputidx\": n,          (numeric) Collateral transaction output index number\n"
             "  \"netaddr\": \"xxxx\",     (string) Masternode network address\n"
-            "  \"addr\": \"xxxx\",        (string) PIVX address for masternode payments\n"
+            "  \"addr\": \"xxxx\",        (string) EncoCoin address for masternode payments\n"
             "  \"status\": \"xxxx\",      (string) Masternode status\n"
             "  \"message\": \"xxxx\"      (string) Masternode status message\n"
             "}\n"
@@ -534,7 +534,7 @@ UniValue getmasternodewinners (const JSONRPCRequest& request)
             "  {\n"
             "    \"nHeight\": n,           (numeric) block height\n"
             "    \"winner\": {\n"
-            "      \"address\": \"xxxx\",    (string) PIVX MN Address\n"
+            "      \"address\": \"xxxx\",    (string) EncoCoin MN Address\n"
             "      \"nVotes\": n,          (numeric) Number of votes for winner\n"
             "    }\n"
             "  }\n"
@@ -547,7 +547,7 @@ UniValue getmasternodewinners (const JSONRPCRequest& request)
             "    \"nHeight\": n,           (numeric) block height\n"
             "    \"winner\": [\n"
             "      {\n"
-            "        \"address\": \"xxxx\",  (string) PIVX MN Address\n"
+            "        \"address\": \"xxxx\",  (string) EncoCoin MN Address\n"
             "        \"nVotes\": n,        (numeric) Number of votes for winner\n"
             "      }\n"
             "      ,...\n"
@@ -881,4 +881,20 @@ UniValue relaymasternodebroadcast(const JSONRPCRequest& request)
     mnb.Relay();
 
     return strprintf("Masternode broadcast sent (service %s, vin %s)", mnb.addr.ToString(), mnb.vin.ToString());
+}
+
+UniValue getcollateral(const JSONRPCRequest& request)
+{
+    if (request.fHelp || (request.params.size() != 0))
+        throw std::runtime_error(
+            "getcollateral\n"
+            "\nPrint the amount of coins currently required as a masternode collateral\n"
+
+            "\nResult:\n"
+            "\"status\"     (numeric) Masternode collateral value right now\n"
+
+            "\nExamples:\n" +
+            HelpExampleCli("getcollateral", "") + HelpExampleRpc("getcollateral", ""));
+
+    return ValueFromAmount(CollateralRequired(chainActive.Height()));
 }

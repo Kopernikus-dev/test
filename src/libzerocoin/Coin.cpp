@@ -9,7 +9,7 @@
  * @copyright  Copyright 2013 Ian Miers, Christina Garman and Matthew Green
  * @license    This project is released under the MIT license.
  **/
-// Copyright (c) 2017-2020 The PIVX developers
+// Copyright (c) 2017-2019 The EncoCoin developers
 
 #include <stdexcept>
 #include <iostream>
@@ -22,7 +22,7 @@ namespace libzerocoin {
 //PublicCoin class
 PublicCoin::PublicCoin(const ZerocoinParams* p):
     params(p) {
-    if (!this->params->initialized) {
+    if (this->params->initialized) {
         throw std::runtime_error("Params are not initialized");
     }
     // Assume this will get set by another method later
