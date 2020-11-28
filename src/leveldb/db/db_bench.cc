@@ -3,14 +3,13 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #include <sys/types.h>
-
-#include <cstdio>
-#include <cstdlib>
-
+#include <stdio.h>
+#include <stdlib.h>
+#include "db/db_impl.h"
+#include "db/version_set.h"
 #include "leveldb/cache.h"
 #include "leveldb/db.h"
 #include "leveldb/env.h"
-#include "leveldb/filter_policy.h"
 #include "leveldb/write_batch.h"
 #include "port/port.h"
 #include "util/crc32c.h"
@@ -36,6 +35,7 @@
 //      seekrandom    -- N random seeks
 //      open          -- cost of opening a DB
 //      crc32c        -- repeated crc32c of 4K of data
+//      acquireload   -- load N*1000 times
 //   Meta operations:
 //      compact     -- Compact the entire DB
 //      stats       -- Print DB stats
@@ -57,7 +57,9 @@ static const char* FLAGS_benchmarks =
     "fill100K,"
     "crc32c,"
     "snappycomp,"
-    "snappyuncomp,";
+    "snappyuncomp,"
+    "acquireload,"
+    ;
 
 // Number of key/values to place in database
 static int FLAGS_num = 1000000;
@@ -110,12 +112,12 @@ static bool FLAGS_use_existing_db = false;
 static bool FLAGS_reuse_logs = false;
 
 // Use the db with the following name.
-static const char* FLAGS_db = nullptr;
+static const char* FLAGS_db = NULL;
 
 namespace leveldb {
 
 namespace {
-leveldb::Env* g_env = nullptr;
+leveldb::Env* g_env = NULL;
 
 // Helper for quickly generating random data.
 class RandomGenerator {
@@ -156,7 +158,7 @@ static Slice TrimSpace(Slice s) {
     start++;
   }
   size_t limit = s.size();
-  while (limit > start && isspace(s[limit - 1])) {
+  while (limit > start && isspace(s[limit-1])) {
     limit--;
   }
   return Slice(s.data() + start, limit - start);
@@ -188,12 +190,14 @@ class Stats {
 
   void Start() {
     next_report_ = 100;
+    last_op_finish_ = start_;
     hist_.Clear();
     done_ = 0;
     bytes_ = 0;
     seconds_ = 0;
+    start_ = g_env->NowMicros();
+    finish_ = start_;
     message_.clear();
-    start_ = finish_ = last_op_finish_ = g_env->NowMicros();
   }
 
   void Merge(const Stats& other) {
@@ -213,7 +217,9 @@ class Stats {
     seconds_ = (finish_ - start_) * 1e-6;
   }
 
-  void AddMessage(Slice msg) { AppendWithSpace(&message_, msg); }
+  void AddMessage(Slice msg) {
+    AppendWithSpace(&message_, msg);
+  }
 
   void FinishedSingleOp() {
     if (FLAGS_histogram) {
@@ -221,34 +227,29 @@ class Stats {
       double micros = now - last_op_finish_;
       hist_.Add(micros);
       if (micros > 20000) {
-        std::fprintf(stderr, "long op: %.1f micros%30s\r", micros, "");
-        std::fflush(stderr);
+        fprintf(stderr, "long op: %.1f micros%30s\r", micros, "");
+        fflush(stderr);
       }
       last_op_finish_ = now;
     }
 
     done_++;
     if (done_ >= next_report_) {
-      if (next_report_ < 1000)
-        next_report_ += 100;
-      else if (next_report_ < 5000)
-        next_report_ += 500;
-      else if (next_report_ < 10000)
-        next_report_ += 1000;
-      else if (next_report_ < 50000)
-        next_report_ += 5000;
-      else if (next_report_ < 100000)
-        next_report_ += 10000;
-      else if (next_report_ < 500000)
-        next_report_ += 50000;
-      else
-        next_report_ += 100000;
-      std::fprintf(stderr, "... finished %d ops%30s\r", done_, "");
-      std::fflush(stderr);
+      if      (next_report_ < 1000)   next_report_ += 100;
+      else if (next_report_ < 5000)   next_report_ += 500;
+      else if (next_report_ < 10000)  next_report_ += 1000;
+      else if (next_report_ < 50000)  next_report_ += 5000;
+      else if (next_report_ < 100000) next_report_ += 10000;
+      else if (next_report_ < 500000) next_report_ += 50000;
+      else                            next_report_ += 100000;
+      fprintf(stderr, "... finished %d ops%30s\r", done_, "");
+      fflush(stderr);
     }
   }
 
-  void AddBytes(int64_t n) { bytes_ += n; }
+  void AddBytes(int64_t n) {
+    bytes_ += n;
+  }
 
   void Report(const Slice& name) {
     // Pretend at least one op was done in case we are running a benchmark
@@ -261,28 +262,29 @@ class Stats {
       // elapsed times.
       double elapsed = (finish_ - start_) * 1e-6;
       char rate[100];
-      std::snprintf(rate, sizeof(rate), "%6.1f MB/s",
-                    (bytes_ / 1048576.0) / elapsed);
+      snprintf(rate, sizeof(rate), "%6.1f MB/s",
+               (bytes_ / 1048576.0) / elapsed);
       extra = rate;
     }
     AppendWithSpace(&extra, message_);
 
-    std::fprintf(stdout, "%-12s : %11.3f micros/op;%s%s\n",
-                 name.ToString().c_str(), seconds_ * 1e6 / done_,
-                 (extra.empty() ? "" : " "), extra.c_str());
+    fprintf(stdout, "%-12s : %11.3f micros/op;%s%s\n",
+            name.ToString().c_str(),
+            seconds_ * 1e6 / done_,
+            (extra.empty() ? "" : " "),
+            extra.c_str());
     if (FLAGS_histogram) {
-      std::fprintf(stdout, "Microseconds per op:\n%s\n",
-                   hist_.ToString().c_str());
+      fprintf(stdout, "Microseconds per op:\n%s\n", hist_.ToString().c_str());
     }
-    std::fflush(stdout);
+    fflush(stdout);
   }
 };
 
 // State shared by all concurrent executions of the same benchmark.
 struct SharedState {
   port::Mutex mu;
-  port::CondVar cv GUARDED_BY(mu);
-  int total GUARDED_BY(mu);
+  port::CondVar cv;
+  int total;
 
   // Each thread goes through the following states:
   //    (1) initializing
@@ -290,22 +292,24 @@ struct SharedState {
   //    (3) running
   //    (4) done
 
-  int num_initialized GUARDED_BY(mu);
-  int num_done GUARDED_BY(mu);
-  bool start GUARDED_BY(mu);
+  int num_initialized;
+  int num_done;
+  bool start;
 
-  SharedState(int total)
-      : cv(&mu), total(total), num_initialized(0), num_done(0), start(false) {}
+  SharedState() : cv(&mu) { }
 };
 
 // Per-thread state for concurrent executions of the same benchmark.
 struct ThreadState {
-  int tid;      // 0..n-1 when running in n threads
-  Random rand;  // Has different seeds for different threads
+  int tid;             // 0..n-1 when running in n threads
+  Random rand;         // Has different seeds for different threads
   Stats stats;
   SharedState* shared;
 
-  ThreadState(int index) : tid(index), rand(1000 + index), shared(nullptr) {}
+  ThreadState(int index)
+      : tid(index),
+        rand(1000 + index) {
+  }
 };
 
 }  // namespace
@@ -325,63 +329,59 @@ class Benchmark {
   void PrintHeader() {
     const int kKeySize = 16;
     PrintEnvironment();
-    std::fprintf(stdout, "Keys:       %d bytes each\n", kKeySize);
-    std::fprintf(
-        stdout, "Values:     %d bytes each (%d bytes after compression)\n",
-        FLAGS_value_size,
-        static_cast<int>(FLAGS_value_size * FLAGS_compression_ratio + 0.5));
-    std::fprintf(stdout, "Entries:    %d\n", num_);
-    std::fprintf(stdout, "RawSize:    %.1f MB (estimated)\n",
-                 ((static_cast<int64_t>(kKeySize + FLAGS_value_size) * num_) /
-                  1048576.0));
-    std::fprintf(
-        stdout, "FileSize:   %.1f MB (estimated)\n",
-        (((kKeySize + FLAGS_value_size * FLAGS_compression_ratio) * num_) /
-         1048576.0));
+    fprintf(stdout, "Keys:       %d bytes each\n", kKeySize);
+    fprintf(stdout, "Values:     %d bytes each (%d bytes after compression)\n",
+            FLAGS_value_size,
+            static_cast<int>(FLAGS_value_size * FLAGS_compression_ratio + 0.5));
+    fprintf(stdout, "Entries:    %d\n", num_);
+    fprintf(stdout, "RawSize:    %.1f MB (estimated)\n",
+            ((static_cast<int64_t>(kKeySize + FLAGS_value_size) * num_)
+             / 1048576.0));
+    fprintf(stdout, "FileSize:   %.1f MB (estimated)\n",
+            (((kKeySize + FLAGS_value_size * FLAGS_compression_ratio) * num_)
+             / 1048576.0));
     PrintWarnings();
-    std::fprintf(stdout, "------------------------------------------------\n");
+    fprintf(stdout, "------------------------------------------------\n");
   }
 
   void PrintWarnings() {
 #if defined(__GNUC__) && !defined(__OPTIMIZE__)
-    std::fprintf(
-        stdout,
-        "WARNING: Optimization is disabled: benchmarks unnecessarily slow\n");
+    fprintf(stdout,
+            "WARNING: Optimization is disabled: benchmarks unnecessarily slow\n"
+            );
 #endif
 #ifndef NDEBUG
-    std::fprintf(
-        stdout,
-        "WARNING: Assertions are enabled; benchmarks unnecessarily slow\n");
+    fprintf(stdout,
+            "WARNING: Assertions are enabled; benchmarks unnecessarily slow\n");
 #endif
 
     // See if snappy is working by attempting to compress a compressible string
     const char text[] = "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy";
     std::string compressed;
     if (!port::Snappy_Compress(text, sizeof(text), &compressed)) {
-      std::fprintf(stdout, "WARNING: Snappy compression is not enabled\n");
+      fprintf(stdout, "WARNING: Snappy compression is not enabled\n");
     } else if (compressed.size() >= sizeof(text)) {
-      std::fprintf(stdout, "WARNING: Snappy compression is not effective\n");
+      fprintf(stdout, "WARNING: Snappy compression is not effective\n");
     }
   }
 
   void PrintEnvironment() {
-    std::fprintf(stderr, "LevelDB:    version %d.%d\n", kMajorVersion,
-                 kMinorVersion);
+    fprintf(stderr, "LevelDB:    version %d.%d\n",
+            kMajorVersion, kMinorVersion);
 
 #if defined(__linux)
-    time_t now = time(nullptr);
-    std::fprintf(stderr, "Date:       %s",
-                 ctime(&now));  // ctime() adds newline
+    time_t now = time(NULL);
+    fprintf(stderr, "Date:       %s", ctime(&now));  // ctime() adds newline
 
-    FILE* cpuinfo = std::fopen("/proc/cpuinfo", "r");
-    if (cpuinfo != nullptr) {
+    FILE* cpuinfo = fopen("/proc/cpuinfo", "r");
+    if (cpuinfo != NULL) {
       char line[1000];
       int num_cpus = 0;
       std::string cpu_type;
       std::string cache_size;
-      while (fgets(line, sizeof(line), cpuinfo) != nullptr) {
+      while (fgets(line, sizeof(line), cpuinfo) != NULL) {
         const char* sep = strchr(line, ':');
-        if (sep == nullptr) {
+        if (sep == NULL) {
           continue;
         }
         Slice key = TrimSpace(Slice(line, sep - 1 - line));
@@ -393,30 +393,30 @@ class Benchmark {
           cache_size = val.ToString();
         }
       }
-      std::fclose(cpuinfo);
-      std::fprintf(stderr, "CPU:        %d * %s\n", num_cpus, cpu_type.c_str());
-      std::fprintf(stderr, "CPUCache:   %s\n", cache_size.c_str());
+      fclose(cpuinfo);
+      fprintf(stderr, "CPU:        %d * %s\n", num_cpus, cpu_type.c_str());
+      fprintf(stderr, "CPUCache:   %s\n", cache_size.c_str());
     }
 #endif
   }
 
  public:
   Benchmark()
-      : cache_(FLAGS_cache_size >= 0 ? NewLRUCache(FLAGS_cache_size) : nullptr),
-        filter_policy_(FLAGS_bloom_bits >= 0
-                           ? NewBloomFilterPolicy(FLAGS_bloom_bits)
-                           : nullptr),
-        db_(nullptr),
-        num_(FLAGS_num),
-        value_size_(FLAGS_value_size),
-        entries_per_batch_(1),
-        reads_(FLAGS_reads < 0 ? FLAGS_num : FLAGS_reads),
-        heap_counter_(0) {
+  : cache_(FLAGS_cache_size >= 0 ? NewLRUCache(FLAGS_cache_size) : NULL),
+    filter_policy_(FLAGS_bloom_bits >= 0
+                   ? NewBloomFilterPolicy(FLAGS_bloom_bits)
+                   : NULL),
+    db_(NULL),
+    num_(FLAGS_num),
+    value_size_(FLAGS_value_size),
+    entries_per_batch_(1),
+    reads_(FLAGS_reads < 0 ? FLAGS_num : FLAGS_reads),
+    heap_counter_(0) {
     std::vector<std::string> files;
     g_env->GetChildren(FLAGS_db, &files);
     for (size_t i = 0; i < files.size(); i++) {
       if (Slice(files[i]).starts_with("heap-")) {
-        g_env->RemoveFile(std::string(FLAGS_db) + "/" + files[i]);
+        g_env->DeleteFile(std::string(FLAGS_db) + "/" + files[i]);
       }
     }
     if (!FLAGS_use_existing_db) {
@@ -435,12 +435,12 @@ class Benchmark {
     Open();
 
     const char* benchmarks = FLAGS_benchmarks;
-    while (benchmarks != nullptr) {
+    while (benchmarks != NULL) {
       const char* sep = strchr(benchmarks, ',');
       Slice name;
-      if (sep == nullptr) {
+      if (sep == NULL) {
         name = benchmarks;
-        benchmarks = nullptr;
+        benchmarks = NULL;
       } else {
         name = Slice(benchmarks, sep - benchmarks);
         benchmarks = sep + 1;
@@ -453,7 +453,7 @@ class Benchmark {
       entries_per_batch_ = 1;
       write_options_ = WriteOptions();
 
-      void (Benchmark::*method)(ThreadState*) = nullptr;
+      void (Benchmark::*method)(ThreadState*) = NULL;
       bool fresh_db = false;
       int num_threads = FLAGS_threads;
 
@@ -510,6 +510,8 @@ class Benchmark {
         method = &Benchmark::Compact;
       } else if (name == Slice("crc32c")) {
         method = &Benchmark::Crc32c;
+      } else if (name == Slice("acquireload")) {
+        method = &Benchmark::AcquireLoad;
       } else if (name == Slice("snappycomp")) {
         method = &Benchmark::SnappyCompress;
       } else if (name == Slice("snappyuncomp")) {
@@ -521,26 +523,25 @@ class Benchmark {
       } else if (name == Slice("sstables")) {
         PrintStats("leveldb.sstables");
       } else {
-        if (!name.empty()) {  // No error message for empty name
-          std::fprintf(stderr, "unknown benchmark '%s'\n",
-                       name.ToString().c_str());
+        if (name != Slice()) {  // No error message for empty name
+          fprintf(stderr, "unknown benchmark '%s'\n", name.ToString().c_str());
         }
       }
 
       if (fresh_db) {
         if (FLAGS_use_existing_db) {
-          std::fprintf(stdout, "%-12s : skipped (--use_existing_db is true)\n",
-                       name.ToString().c_str());
-          method = nullptr;
+          fprintf(stdout, "%-12s : skipped (--use_existing_db is true)\n",
+                  name.ToString().c_str());
+          method = NULL;
         } else {
           delete db_;
-          db_ = nullptr;
+          db_ = NULL;
           DestroyDB(FLAGS_db, Options());
           Open();
         }
       }
 
-      if (method != nullptr) {
+      if (method != NULL) {
         RunBenchmark(num_threads, name, method);
       }
     }
@@ -584,7 +585,11 @@ class Benchmark {
 
   void RunBenchmark(int n, Slice name,
                     void (Benchmark::*method)(ThreadState*)) {
-    SharedState shared(n);
+    SharedState shared;
+    shared.total = n;
+    shared.num_initialized = 0;
+    shared.num_done = 0;
+    shared.start = false;
 
     ThreadArg* arg = new ThreadArg[n];
     for (int i = 0; i < n; i++) {
@@ -632,10 +637,26 @@ class Benchmark {
       bytes += size;
     }
     // Print so result is not dead
-    std::fprintf(stderr, "... crc=0x%x\r", static_cast<unsigned int>(crc));
+    fprintf(stderr, "... crc=0x%x\r", static_cast<unsigned int>(crc));
 
     thread->stats.AddBytes(bytes);
     thread->stats.AddMessage(label);
+  }
+
+  void AcquireLoad(ThreadState* thread) {
+    int dummy;
+    port::AtomicPointer ap(&dummy);
+    int count = 0;
+    void *ptr = NULL;
+    thread->stats.AddMessage("(each op is 1000 loads)");
+    while (count < 100000) {
+      for (int i = 0; i < 1000; i++) {
+        ptr = ap.Acquire_Load();
+      }
+      count++;
+      thread->stats.FinishedSingleOp();
+    }
+    if (ptr == NULL) exit(1); // Disable unused variable warning.
   }
 
   void SnappyCompress(ThreadState* thread) {
@@ -656,8 +677,8 @@ class Benchmark {
       thread->stats.AddMessage("(snappy failure)");
     } else {
       char buf[100];
-      std::snprintf(buf, sizeof(buf), "(output: %.1f%%)",
-                    (produced * 100.0) / bytes);
+      snprintf(buf, sizeof(buf), "(output: %.1f%%)",
+               (produced * 100.0) / bytes);
       thread->stats.AddMessage(buf);
       thread->stats.AddBytes(bytes);
     }
@@ -671,8 +692,8 @@ class Benchmark {
     int64_t bytes = 0;
     char* uncompressed = new char[input.size()];
     while (ok && bytes < 1024 * 1048576) {  // Compress 1G
-      ok = port::Snappy_Uncompress(compressed.data(), compressed.size(),
-                                   uncompressed);
+      ok =  port::Snappy_Uncompress(compressed.data(), compressed.size(),
+                                    uncompressed);
       bytes += input.size();
       thread->stats.FinishedSingleOp();
     }
@@ -686,7 +707,7 @@ class Benchmark {
   }
 
   void Open() {
-    assert(db_ == nullptr);
+    assert(db_ == NULL);
     Options options;
     options.env = g_env;
     options.create_if_missing = !FLAGS_use_existing_db;
@@ -699,8 +720,8 @@ class Benchmark {
     options.reuse_logs = FLAGS_reuse_logs;
     Status s = DB::Open(options, FLAGS_db, &db_);
     if (!s.ok()) {
-      std::fprintf(stderr, "open error: %s\n", s.ToString().c_str());
-      std::exit(1);
+      fprintf(stderr, "open error: %s\n", s.ToString().c_str());
+      exit(1);
     }
   }
 
@@ -712,14 +733,18 @@ class Benchmark {
     }
   }
 
-  void WriteSeq(ThreadState* thread) { DoWrite(thread, true); }
+  void WriteSeq(ThreadState* thread) {
+    DoWrite(thread, true);
+  }
 
-  void WriteRandom(ThreadState* thread) { DoWrite(thread, false); }
+  void WriteRandom(ThreadState* thread) {
+    DoWrite(thread, false);
+  }
 
   void DoWrite(ThreadState* thread, bool seq) {
     if (num_ != FLAGS_num) {
       char msg[100];
-      std::snprintf(msg, sizeof(msg), "(%d ops)", num_);
+      snprintf(msg, sizeof(msg), "(%d ops)", num_);
       thread->stats.AddMessage(msg);
     }
 
@@ -730,17 +755,17 @@ class Benchmark {
     for (int i = 0; i < num_; i += entries_per_batch_) {
       batch.Clear();
       for (int j = 0; j < entries_per_batch_; j++) {
-        const int k = seq ? i + j : (thread->rand.Next() % FLAGS_num);
+        const int k = seq ? i+j : (thread->rand.Next() % FLAGS_num);
         char key[100];
-        std::snprintf(key, sizeof(key), "%016d", k);
+        snprintf(key, sizeof(key), "%016d", k);
         batch.Put(key, gen.Generate(value_size_));
         bytes += value_size_ + strlen(key);
         thread->stats.FinishedSingleOp();
       }
       s = db_->Write(write_options_, &batch);
       if (!s.ok()) {
-        std::fprintf(stderr, "put error: %s\n", s.ToString().c_str());
-        std::exit(1);
+        fprintf(stderr, "put error: %s\n", s.ToString().c_str());
+        exit(1);
       }
     }
     thread->stats.AddBytes(bytes);
@@ -779,14 +804,14 @@ class Benchmark {
     for (int i = 0; i < reads_; i++) {
       char key[100];
       const int k = thread->rand.Next() % FLAGS_num;
-      std::snprintf(key, sizeof(key), "%016d", k);
+      snprintf(key, sizeof(key), "%016d", k);
       if (db_->Get(options, key, &value).ok()) {
         found++;
       }
       thread->stats.FinishedSingleOp();
     }
     char msg[100];
-    std::snprintf(msg, sizeof(msg), "(%d of %d found)", found, num_);
+    snprintf(msg, sizeof(msg), "(%d of %d found)", found, num_);
     thread->stats.AddMessage(msg);
   }
 
@@ -796,7 +821,7 @@ class Benchmark {
     for (int i = 0; i < reads_; i++) {
       char key[100];
       const int k = thread->rand.Next() % FLAGS_num;
-      std::snprintf(key, sizeof(key), "%016d.", k);
+      snprintf(key, sizeof(key), "%016d.", k);
       db_->Get(options, key, &value);
       thread->stats.FinishedSingleOp();
     }
@@ -809,7 +834,7 @@ class Benchmark {
     for (int i = 0; i < reads_; i++) {
       char key[100];
       const int k = thread->rand.Next() % range;
-      std::snprintf(key, sizeof(key), "%016d", k);
+      snprintf(key, sizeof(key), "%016d", k);
       db_->Get(options, key, &value);
       thread->stats.FinishedSingleOp();
     }
@@ -822,14 +847,14 @@ class Benchmark {
       Iterator* iter = db_->NewIterator(options);
       char key[100];
       const int k = thread->rand.Next() % FLAGS_num;
-      std::snprintf(key, sizeof(key), "%016d", k);
+      snprintf(key, sizeof(key), "%016d", k);
       iter->Seek(key);
       if (iter->Valid() && iter->key() == key) found++;
       delete iter;
       thread->stats.FinishedSingleOp();
     }
     char msg[100];
-    std::snprintf(msg, sizeof(msg), "(%d of %d found)", found, num_);
+    snprintf(msg, sizeof(msg), "(%d of %d found)", found, num_);
     thread->stats.AddMessage(msg);
   }
 
@@ -840,23 +865,27 @@ class Benchmark {
     for (int i = 0; i < num_; i += entries_per_batch_) {
       batch.Clear();
       for (int j = 0; j < entries_per_batch_; j++) {
-        const int k = seq ? i + j : (thread->rand.Next() % FLAGS_num);
+        const int k = seq ? i+j : (thread->rand.Next() % FLAGS_num);
         char key[100];
-        std::snprintf(key, sizeof(key), "%016d", k);
+        snprintf(key, sizeof(key), "%016d", k);
         batch.Delete(key);
         thread->stats.FinishedSingleOp();
       }
       s = db_->Write(write_options_, &batch);
       if (!s.ok()) {
-        std::fprintf(stderr, "del error: %s\n", s.ToString().c_str());
-        std::exit(1);
+        fprintf(stderr, "del error: %s\n", s.ToString().c_str());
+        exit(1);
       }
     }
   }
 
-  void DeleteSeq(ThreadState* thread) { DoDelete(thread, true); }
+  void DeleteSeq(ThreadState* thread) {
+    DoDelete(thread, true);
+  }
 
-  void DeleteRandom(ThreadState* thread) { DoDelete(thread, false); }
+  void DeleteRandom(ThreadState* thread) {
+    DoDelete(thread, false);
+  }
 
   void ReadWhileWriting(ThreadState* thread) {
     if (thread->tid > 0) {
@@ -875,11 +904,11 @@ class Benchmark {
 
         const int k = thread->rand.Next() % FLAGS_num;
         char key[100];
-        std::snprintf(key, sizeof(key), "%016d", k);
+        snprintf(key, sizeof(key), "%016d", k);
         Status s = db_->Put(write_options_, key, gen.Generate(value_size_));
         if (!s.ok()) {
-          std::fprintf(stderr, "put error: %s\n", s.ToString().c_str());
-          std::exit(1);
+          fprintf(stderr, "put error: %s\n", s.ToString().c_str());
+          exit(1);
         }
       }
 
@@ -888,14 +917,16 @@ class Benchmark {
     }
   }
 
-  void Compact(ThreadState* thread) { db_->CompactRange(nullptr, nullptr); }
+  void Compact(ThreadState* thread) {
+    db_->CompactRange(NULL, NULL);
+  }
 
   void PrintStats(const char* key) {
     std::string stats;
     if (!db_->GetProperty(key, &stats)) {
       stats = "(failed)";
     }
-    std::fprintf(stdout, "\n%s\n", stats.c_str());
+    fprintf(stdout, "\n%s\n", stats.c_str());
   }
 
   static void WriteToFile(void* arg, const char* buf, int n) {
@@ -904,19 +935,18 @@ class Benchmark {
 
   void HeapProfile() {
     char fname[100];
-    std::snprintf(fname, sizeof(fname), "%s/heap-%04d", FLAGS_db,
-                  ++heap_counter_);
+    snprintf(fname, sizeof(fname), "%s/heap-%04d", FLAGS_db, ++heap_counter_);
     WritableFile* file;
     Status s = g_env->NewWritableFile(fname, &file);
     if (!s.ok()) {
-      std::fprintf(stderr, "%s\n", s.ToString().c_str());
+      fprintf(stderr, "%s\n", s.ToString().c_str());
       return;
     }
     bool ok = port::GetHeapProfile(WriteToFile, file);
     delete file;
     if (!ok) {
-      std::fprintf(stderr, "heap profiling not supported\n");
-      g_env->RemoveFile(fname);
+      fprintf(stderr, "heap profiling not supported\n");
+      g_env->DeleteFile(fname);
     }
   }
 };
@@ -970,18 +1000,18 @@ int main(int argc, char** argv) {
     } else if (strncmp(argv[i], "--db=", 5) == 0) {
       FLAGS_db = argv[i] + 5;
     } else {
-      std::fprintf(stderr, "Invalid flag '%s'\n", argv[i]);
-      std::exit(1);
+      fprintf(stderr, "Invalid flag '%s'\n", argv[i]);
+      exit(1);
     }
   }
 
   leveldb::g_env = leveldb::Env::Default();
 
   // Choose a location for the test database if none given with --db=<path>
-  if (FLAGS_db == nullptr) {
-    leveldb::g_env->GetTestDirectory(&default_db_path);
-    default_db_path += "/dbbench";
-    FLAGS_db = default_db_path.c_str();
+  if (FLAGS_db == NULL) {
+      leveldb::g_env->GetTestDirectory(&default_db_path);
+      default_db_path += "/dbbench";
+      FLAGS_db = default_db_path.c_str();
   }
 
   leveldb::Benchmark benchmark;
